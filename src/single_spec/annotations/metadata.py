@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from .docker_image import Image
+from .runtime_env import Env
 
 
 @dataclass(frozen=True)
 class Metadata:
-    image: Image | None = None  # Docker image for the runtime environment.
+    env: Env | None = None  # runtime environment.
     gpu: int | None = None  # GPU requirement as a string (e.g., "2xA100").
     # lifecycle
     entry: str  # fn: function name; cls: method name
@@ -14,6 +14,6 @@ class Metadata:
 
     def __repr__(self):
         return (
-            f"Metadata(image={self.image}, gpu={self.gpu}, "
+            f"Metadata(env={self.env}, gpu={self.gpu}, "
             f"entry='{self.entry}', setup='{self.setup}', teardown='{self.teardown}')"
         )

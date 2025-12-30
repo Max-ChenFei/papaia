@@ -2,11 +2,11 @@ import inspect
 
 from .metadata import Metadata
 from .registry import register
-from .docker_image import Image
+from .runtime_env import Env
 
 
 def required_fn(
-    image: Image | None = None,
+    env: Env | None = None,
     gpu: int | None = None,  # GPU requirement as a string (e.g., "2xA100").
 ):
     "decorator to annotate metadata for a function"
@@ -14,7 +14,7 @@ def required_fn(
     def decorator(func):
         if not inspect.isfunction(func):
             raise ValueError("@required_fn can only be applied to functions.")
-        register(func, Metadata(image=image, gpu=gpu, entry=func.__name__))
+        register(func, Metadata(env=env, gpu=gpu, entry=func.__name__))
         return func
 
     return decorator
@@ -22,7 +22,7 @@ def required_fn(
 
 def required_cls(
     entry: str,  # cls: method name
-    image: Image | None = None,
+    env: Env | None = None,
     gpu: int | None = None,  # GPU requirement as a string (e.g., "2xA100").
     setup: str = "__init__",  # class only; ignored for functions
     teardown: str | None = None,  # class only; ignored for functions
@@ -34,7 +34,7 @@ def required_cls(
             raise ValueError("@required_cls can only be applied to classes.")
         register(
             cls,
-            Metadata(image=image, gpu=gpu, entry=entry, setup=setup, teardown=teardown),
+            Metadata(env=env, gpu=gpu, entry=entry, setup=setup, teardown=teardown),
         )
         return cls
 
