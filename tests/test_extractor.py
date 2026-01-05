@@ -8,7 +8,7 @@ from ast_eq import ast_eq
 
 def test_extract_fn_metadata():
     source = """
-@required(env="python:3.10", accel="A100:2")
+@required(env="python:3.10", accel="A100:2", cpus=4, memory=16)
 def my_function():
     pass
 
@@ -18,7 +18,9 @@ print("done")
     metadata = extract_metadata(decorator, is_class_def=False)
     assert metadata is not None
     assert metadata.env == "python:3.10"
-    assert metadata.accel == "A100:2"
+    assert metadata.resources.accel == "A100:2"
+    assert metadata.resources.cpus == 4
+    assert metadata.resources.memory == 16
 
 
 def test_split_decorator():
@@ -63,7 +65,7 @@ def my_function():
     pass""").body[0],
     )
     assert desc.metadata.env == "python:3.10"
-    assert desc.metadata.accel == "A100:2"
+    assert desc.metadata.resources.accel == "A100:2"
 
 
 def test_extract_desc_from_def_cls():
@@ -96,4 +98,4 @@ class MyClass:
         pass""").body[0],
     )
     assert desc.metadata.env == "python:3.10"
-    assert desc.metadata.accel == "A100:2"
+    assert desc.metadata.resources.accel == "A100:2"
