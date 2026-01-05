@@ -1,9 +1,9 @@
 import ast
 
 from .backends import get_backend_by_name, ExecutionBackend
-from .available_exec_sites import available_exec_sites
+from .exec_nodes import available_exec_nodes
 
-from .exec_site import ExecSite
+from .exec_node import ExecNode
 from ..IR import Desc
 
 
@@ -12,7 +12,7 @@ def place_on_exec_sites(
 ) -> tuple[dict[str, ast.AST], dict[str, ExecutionBackend]]:
     """Place tools on available execution sites and return access stub and used backends."""
     # Todo: retrieve latest exec sites and its capabilities
-    default_site_name, exec_sites = available_exec_sites()
+    default_site_name, exec_sites = available_exec_nodes()
     plan = plan_placement(descs, exec_sites, default_site_name)
 
     stub_ast = {}
@@ -25,9 +25,9 @@ def place_on_exec_sites(
 
 
 def plan_placement(
-    descs: dict[str, Desc], exec_sites: list[ExecSite], default_site_name: str | None
-) -> dict[str, ExecSite]:
-    placement: dict[str, ExecSite] = {}
+    descs: dict[str, Desc], exec_sites: list[ExecNode], default_site_name: str | None
+) -> dict[str, ExecNode]:
+    placement: dict[str, ExecNode] = {}
 
     # Todo: simple placement logic: assign tools to exec sites based on required capabilities
 

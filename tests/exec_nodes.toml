@@ -1,0 +1,13 @@
+default = "local"
+
+[nodes.local]
+backend = "local"
+cpus = 8
+memory = 32
+accel = "A100:1"
+
+[nodes.gpu_k8s]
+backend = "k8s"
+cpus = 32
+memory = 128
+accel = "A100:6"

@@ -2,7 +2,7 @@ import runpy
 from pathlib import Path
 
 from .IR import extract_desc
-from .deploy import place_on_exec_sites
+from .exec import place_on_exec_sites
 from .ast_utils import read_ast, update_ast, write_ast, delete_file
 
 
