@@ -1,8 +1,14 @@
-def required(
-    env: str | None = None,
-    gpu: int | None = None,  # GPU requirement as a string (e.g., "2xA100").
-):
-    "decorator to annotate metadata for a function"
+def required(env: str | None = None, accel: str | None = None):
+    """Decorator to annotate runtime metadata for a function.
+
+    Args:
+        env: Runtime environment string (e.g., "python:3.10").
+        accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
+            (defaults to a count of 1). Example: "H100:4".
+
+    Returns:
+        A decorator that returns the original function (metadata annotation only).
+    """
 
     def decorator(func):
         return func
@@ -11,13 +17,25 @@ def required(
 
 
 def required_cls(
-    entry: str,  # cls: method name
+    entry: str,
     env: str | None = None,
-    gpu: int | None = None,  # GPU requirement as a string (e.g., "2xA100").
-    setup: str | None = None,  # class only; ignored for functions
-    teardown: str | None = None,  # class only; ignored for functions
+    accel: str | None = None,
+    setup: str | None = None,
+    teardown: str | None = None,
 ):
-    "decorator to annotate metadata for a class"
+    """Decorator to annotate runtime metadata for a class.
+
+    Args:
+        entry: Entry method name for the class.
+        env: Runtime environment string (e.g., "python:3.10").
+        accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
+            (defaults to a count of 1). Example: "H100:4".
+        setup: Setup method name for the class.
+        teardown: Teardown method name for the class.
+
+    Returns:
+        A decorator that returns the original class (metadata annotation only).
+    """
 
     def decorator(cls):
         return cls

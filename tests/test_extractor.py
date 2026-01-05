@@ -8,7 +8,7 @@ from ast_eq import ast_eq
 
 def test_extract_fn_metadata():
     source = """
-@required(env="python:3.10", gpu="2xA100")
+@required(env="python:3.10", accel="A100:2")
 def my_function():
     pass
 
@@ -18,12 +18,12 @@ print("done")
     metadata = extract_metadata(decorator, is_class_def=False)
     assert metadata is not None
     assert metadata.env == "python:3.10"
-    assert metadata.gpu == "2xA100"
+    assert metadata.accel == "A100:2"
 
 
 def test_split_decorator():
     source = """
-@required(env="python:3.10", gpu="2xA100")
+@required(env="python:3.10", accel="A100:2")
 @tool
 @another_decorator(param=42)
 def my_function():
@@ -37,7 +37,7 @@ def my_function():
 
 def test_extract_desc_from_def():
     source = """
-@required(env="python:3.10", gpu="2xA100")
+@required(env="python:3.10", accel="A100:2")
 @tool
 @another_decorator(param=42)
 def my_function():
@@ -63,12 +63,12 @@ def my_function():
     pass""").body[0],
     )
     assert desc.metadata.env == "python:3.10"
-    assert desc.metadata.gpu == "2xA100"
+    assert desc.metadata.accel == "A100:2"
 
 
 def test_extract_desc_from_def_cls():
     source = """
-@required_cls(env="python:3.10", gpu="2xA100", entry="main_method")
+@required_cls(env="python:3.10", accel="A100:2", entry="main_method")
 @tool
 @another_decorator(param=42)
 class MyClass:
@@ -96,4 +96,4 @@ class MyClass:
         pass""").body[0],
     )
     assert desc.metadata.env == "python:3.10"
-    assert desc.metadata.gpu == "2xA100"
+    assert desc.metadata.accel == "A100:2"

@@ -4,21 +4,32 @@ from dataclasses import dataclass
 from .env import Env
 
 
-# Todo: capblitiess?
 @dataclass(frozen=True)
 class Metadata:
-    env: Env | None = None  # runtime environment.
-    gpu: int | None = None  # GPU requirement as a string (e.g., "2xA100").
-    # lifecycle
-    entry: str | None = None  # class only; method name
-    setup: str | None = None  # class only; method name
-    teardown: str | None = None  # class only; method name
+    """Runtime metadata for a function or class.
+
+    Attributes:
+        env: Runtime environment.
+        accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
+            (defaults to a count of 1). Example: "H100:4".
+        entry: Class only. Entry method name.
+        setup: Class only. Setup method name.
+        teardown: Class only. Teardown method name.
+    """
+
+    env: Env | None = None
+    accel: str | None = None
+
+    # lifecycle (class-only)
+    entry: str | None = None
+    setup: str | None = None
+    teardown: str | None = None
 
 
 def extract_metadata(decorator: ast.Call, is_class_def: bool) -> Metadata | None:
     """Extract Metadata from a single decorator AST node."""
     env = None
-    gpu = None
+    accel = None
     entry = None
     setup = None
     teardown = None
@@ -26,8 +37,8 @@ def extract_metadata(decorator: ast.Call, is_class_def: bool) -> Metadata | None
     for keyword in decorator.keywords:
         if keyword.arg == "env":
             env = ast.literal_eval(keyword.value)
-        elif keyword.arg == "gpu":
-            gpu = ast.literal_eval(keyword.value)
+        elif keyword.arg == "accel":
+            accel = ast.literal_eval(keyword.value)
         elif is_class_def:
             if keyword.arg == "entry":
                 entry = ast.literal_eval(keyword.value)
@@ -37,10 +48,10 @@ def extract_metadata(decorator: ast.Call, is_class_def: bool) -> Metadata | None
                 teardown = ast.literal_eval(keyword.value)
 
     if not is_class_def:
-        if env is None and gpu is None:
+        if env is None and accel is None:
             return None
         else:
-            return Metadata(env=env, gpu=gpu)
+            return Metadata(env=env, accel=accel)
     if entry is None:
         raise ValueError("Class metadata must specify 'entry' method.")
-    return Metadata(env=env, gpu=gpu, entry=entry, setup=setup, teardown=teardown)
+    return Metadata(env=env, accel=accel, entry=entry, setup=setup, teardown=teardown)
