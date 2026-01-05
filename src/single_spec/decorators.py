@@ -1,8 +1,15 @@
-def required(env: str | None = None, accel: str | None = None):
+def required(
+    env: str | None = None,
+    cpus: int | None = None,
+    memory: int | None = None,
+    accel: str | None = None,
+):
     """Decorator to annotate runtime metadata for a function.
 
     Args:
         env: Runtime environment string (e.g., "python:3.10").
+        cpus: Number of CPUs at least.
+        memory: Memory specification in GB at least.
         accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
             (defaults to a count of 1). Example: "H100:4".
 
@@ -18,6 +25,8 @@ def required(env: str | None = None, accel: str | None = None):
 
 def required_cls(
     entry: str,
+    cpus: int | None = None,
+    memory: int | None = None,
     env: str | None = None,
     accel: str | None = None,
     setup: str | None = None,
@@ -27,6 +36,8 @@ def required_cls(
 
     Args:
         entry: Entry method name for the class.
+        cpus: Number of CPUs at least.
+        memory: Memory specification in GB at least.
         env: Runtime environment string (e.g., "python:3.10").
         accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
             (defaults to a count of 1). Example: "H100:4".
