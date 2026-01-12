@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from single_spec import available_exec_nodes
+from single_spec import available_nodes
 
 
 def test_available_exec_nodes_empty():
@@ -8,8 +8,8 @@ def test_available_exec_nodes_empty():
     try:
         # Change to a directory without exec_nodes.toml
         os.chdir(Path(__file__).parent.parent / "src")
-        default_node, nodes = available_exec_nodes()
-        assert default_node is None
+        nodes, default_node_idx = available_nodes()
+        assert default_node_idx is None
         assert nodes == []
     finally:
         os.chdir(original_dir)
@@ -20,21 +20,23 @@ def test_available_exec_nodes_file():
     try:
         # Change to tests directory where exec_nodes.toml exists
         os.chdir(Path(__file__).parent)
-        default_node, nodes = available_exec_nodes()
+        nodes, local_index = available_nodes()
 
-        assert default_node == "local"
+        assert local_index == 0
+        assert nodes is not None
         assert len(nodes) == 2
-
         # Check local node
-        local_node = next(n for n in nodes if n.name == "local")
-        assert local_node.resources.cpus == 8
-        assert local_node.resources.memory == 32
-        assert local_node.resources.accel == "A100:1"
+        local_node = nodes[0]
+        assert local_node.cpus == 8
+        assert local_node.memory == 32
+        assert local_node.accel_type == "A100"
+        assert local_node.accel_count == 1
 
         # Check gpu_k8s node
-        gpu_node = next(n for n in nodes if n.name == "gpu_k8s")
-        assert gpu_node.resources.cpus == 32
-        assert gpu_node.resources.memory == 128
-        assert gpu_node.resources.accel == "A100:6"
+        gpu_node = nodes[1]
+        assert gpu_node.cpus == 32
+        assert gpu_node.memory == 128
+        assert gpu_node.accel_type == "A100"
+        assert gpu_node.accel_count == 6
     finally:
         os.chdir(original_dir)

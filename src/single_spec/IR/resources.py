@@ -8,13 +8,14 @@ class Resources:
     Attributes:
         cpus: Number of CPUs at least.
         memory: Memory specification in GB at least.
-        accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
-            (defaults to a count of 1). Example: "H100:4".
+        accel_type: Accelerator name like "A100".
+        accel_count: Number of accelerators at least.
     """
 
-    cpus: int | None = None
-    memory: int | None = None
-    accel: str | None = None
+    cpus: int = 0
+    memory: int = 0
+    accel_type: str | None = None
+    accel_count: int = 0
 
 
 RESOURCE_FIELDS = {f.name for f in fields(Resources)}

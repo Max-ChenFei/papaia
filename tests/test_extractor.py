@@ -18,7 +18,8 @@ print("done")
     metadata = extract_metadata(decorator, is_class_def=False)
     assert metadata is not None
     assert metadata.env == "python:3.10"
-    assert metadata.resources.accel == "A100:2"
+    assert metadata.resources.accel_type == "A100"
+    assert metadata.resources.accel_count == 2
     assert metadata.resources.cpus == 4
     assert metadata.resources.memory == 16
 
@@ -65,7 +66,8 @@ def my_function():
     pass""").body[0],
     )
     assert desc.metadata.env == "python:3.10"
-    assert desc.metadata.resources.accel == "A100:2"
+    assert desc.metadata.resources.accel_type == "A100"
+    assert desc.metadata.resources.accel_count == 2
 
 
 def test_extract_desc_from_def_cls():
@@ -98,4 +100,5 @@ class MyClass:
         pass""").body[0],
     )
     assert desc.metadata.env == "python:3.10"
-    assert desc.metadata.resources.accel == "A100:2"
+    assert desc.metadata.resources.accel_type == "A100"
+    assert desc.metadata.resources.accel_count == 2

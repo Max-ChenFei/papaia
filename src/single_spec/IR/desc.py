@@ -11,6 +11,9 @@ class Desc:
     ast_node: ast.AST
     metadata: Metadata
 
+    def resources(self) -> Metadata:
+        return self.metadata.resources
+
 
 def extract_desc(ast: ast.Module) -> dict[str, Desc]:
     """Extract Desc from function and class definitions in the AST that are marked with our decorator."""
