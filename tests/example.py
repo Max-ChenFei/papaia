@@ -4,7 +4,7 @@ from langchain.agents import create_agent
 
 
 @tool
-@required(env="python-3.9", accel="A100:1")
+@required(accel="A100:1")
 def get_weather(city: str) -> str:
     """Get weather for a given city.
     Args:

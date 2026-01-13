@@ -2,7 +2,7 @@ import ast
 from ortools.sat.python import cp_model
 from typing import Dict, Tuple
 
-from .backends import get_backend_by_name, ExecutionBackend
+from .executors import get_executor_by_name, Executor
 from .nodes import available_nodes, Node
 
 from ..IR import Desc
@@ -10,20 +10,22 @@ from ..IR import Desc
 
 def place_on_exec_sites(
     descs: dict[str, Desc],
-) -> tuple[dict[str, ast.AST], dict[str, ExecutionBackend]]:
-    """Place on available execution nodes and return access stub and used backends."""
+) -> tuple[dict[str, ast.AST], dict[str, Executor]]:
+    """Place on available execution nodes and return access stub and used executors."""
     exec_nodes, local_index = available_nodes()
     plan = assignment(list(descs.values()), exec_nodes, local_index=local_index)
 
     stub_ast = {}
-    backend = {}
+    executor = {}
     names = list(descs.keys())
     for i, node_index in plan.items():
         node = exec_nodes[node_index]
-        backend_instance = get_backend_by_name(node.name)
-        stub_ast[i] = backend_instance.run(descs[names[i]])
-        backend[i] = backend_instance
-    return stub_ast, backend
+        executor_instance = get_executor_by_name(
+            node.name, list(descs.values())[i].env is not None
+        )
+        stub_ast[i] = executor_instance.run(descs[names[i]])
+        executor[i] = executor_instance
+    return stub_ast, executor
 
 
 def assignment(
@@ -60,17 +62,16 @@ def assignment(
             continue
 
         model.Add(
-            sum(tasks[i].resources().cpus * var for i, var in assigned_x)
-            <= nodes[j].cpus
+            sum(tasks[i].resources.cpus * var for i, var in assigned_x) <= nodes[j].cpus
         )
         model.Add(
-            sum(tasks[i].resources().memory * var for i, var in assigned_x)
+            sum(tasks[i].resources.memory * var for i, var in assigned_x)
             <= nodes[j].memory
         )
 
         # Accelerator capacity (same type on node, so just total count)
         model.Add(
-            sum(tasks[i].resources().accel_count * var for i, var in assigned_x)
+            sum(tasks[i].resources.accel_count * var for i, var in assigned_x)
             <= nodes[j].accel_count
         )
 
@@ -117,7 +118,7 @@ def candidate_nodes(tasks: list, nodes: list[Node]) -> list[list[int]]:
         raise ValueError("No available execution nodes to assign tasks to.")
     J_i: list[list[int]] = []
     for t in tasks:
-        r = t.resources()
+        r = t.resources
         cand = []
         for j, n in enumerate(nodes):
             # Accelerator compatibility
