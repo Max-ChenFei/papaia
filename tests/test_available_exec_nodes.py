@@ -8,9 +8,9 @@ def test_available_exec_nodes_empty():
     try:
         # Change to a directory without exec_nodes.toml
         os.chdir(Path(__file__).parent.parent / "src")
-        nodes, default_node_idx = available_nodes()
-        assert default_node_idx is None
-        assert nodes == []
+        available_nodes()
+    except FileNotFoundError as e:
+        assert "No exec_nodes.toml found in current working directory" in str(e)
     finally:
         os.chdir(original_dir)
 

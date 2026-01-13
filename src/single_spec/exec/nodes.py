@@ -19,10 +19,9 @@ EXEC_NODE_CONFIG_FILENAME = "exec_nodes.toml"
 def available_nodes() -> tuple[list[Node], int | None]:
     path = Path(EXEC_NODE_CONFIG_FILENAME)
     if not path.exists():
-        Warning(
-            "No exec_nodes.toml found in current working directory, proceeding with no available exec nodes."
+        raise FileNotFoundError(
+            f"No exec_nodes.toml found in current working directory ({path.resolve()})."
         )
-        return [], None
     data = tomllib.loads(path.read_text(encoding="utf-8"))
 
     nodes_tbl = data.get("nodes")
@@ -30,6 +29,8 @@ def available_nodes() -> tuple[list[Node], int | None]:
         raise ValueError(
             "exec_sites.toml must contain a [nodes] table with sub-tables like [nodes.local]."
         )
+    if len(nodes_tbl.items()) == 0:
+        raise ValueError("exec_sites.toml must contain at least one node in [nodes].")
     nodes = []
     local_index = None
     for name, cfg in nodes_tbl.items():
@@ -52,5 +53,8 @@ def available_nodes() -> tuple[list[Node], int | None]:
         )
         if name == "local":
             local_index = len(nodes) - 1
-
+    if len(nodes) == 0:
+        raise ValueError("No execution nodes defined in exec_nodes.toml.")
+    if local_index is None:
+        raise ValueError("exec_nodes.toml must define a 'local' node.")
     return nodes, local_index

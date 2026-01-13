@@ -1,5 +1,5 @@
 import ast
-from single_spec.ast_utils import update_ast
+from single_spec.utils import update_ast
 from ast_eq import ast_eq
 
 

@@ -56,7 +56,7 @@ class IsolatedAdapter(ExecutionBackend):
 
 
 available_backends = {
-    "in_process": InProcessBackend(),
+    "local": InProcessBackend(),
     "isolated": IsolatedAdapter(),
 }
 

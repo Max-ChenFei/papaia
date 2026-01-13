@@ -17,10 +17,11 @@ def place_on_exec_sites(
 
     stub_ast = {}
     backend = {}
+    names = list(descs.keys())
     for i, node_index in plan.items():
         node = exec_nodes[node_index]
         backend_instance = get_backend_by_name(node.name)
-        stub_ast[i] = backend_instance.run(descs[i])
+        stub_ast[i] = backend_instance.run(descs[names[i]])
         backend[i] = backend_instance
     return stub_ast, backend
 
@@ -31,7 +32,10 @@ def assignment(
     local_index: int | None = None,
     time_limit_s: float = 10.0,
     num_workers: int = 8,
-) -> dict[str, str]:
+) -> dict[int, int]:
+    """Assign tasks to execution nodes using CP-SAT solver.
+    returns a mapping from task index to node index.
+    """
     model = cp_model.CpModel()
 
     I = range(len(tasks))
@@ -109,6 +113,8 @@ def assignment(
 
 def candidate_nodes(tasks: list, nodes: list[Node]) -> list[list[int]]:
     """Build J_i by filtering infeasible task-node pairs."""
+    if not nodes:
+        raise ValueError("No available execution nodes to assign tasks to.")
     J_i: list[list[int]] = []
     for t in tasks:
         r = t.resources()
@@ -130,6 +136,9 @@ def candidate_nodes(tasks: list, nodes: list[Node]) -> list[list[int]]:
                     cand.append(j)
 
         if not cand:
-            raise ValueError(f"No feasible node for task {t}")
+            available = ", ".join(str(node) for node in nodes)
+            raise ValueError(
+                f"No feasible node for {t.ast_node.name} with {r}. Current available nodes: {available}"
+            )
         J_i.append(cand)
     return J_i

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .IR import extract_desc
 from .exec import place_on_exec_sites
-from .ast_utils import read_ast, update_ast, write_ast, delete_file
+from .utils import read_ast, update_ast, write_ast, delete_file
 
 
 def compile_and_run(file_path: Path):

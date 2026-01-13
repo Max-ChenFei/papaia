@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from .metadata import Metadata, extract_metadata
 from ..decorators import decorator_keywords
-from ..ast_utils import is_class_def, split_decorator, update_decorator_list
+from ..utils import is_class_def, split_decorator, update_decorator_list
 
 
 @dataclass
