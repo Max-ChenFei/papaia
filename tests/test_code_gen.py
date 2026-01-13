@@ -5,21 +5,41 @@ from ast_eq import ast_eq
 
 
 def test_func2fastapi():
-    src = """
+    src = '''
 def add2(a: int, b: int = 1) -> int:
-    return a + b
-    """
+    """Adds two numbers.
 
-    code = func2fastapi(ast.parse(src))
+    Args:
+        a: First number.
+        b: Second number. Defaults to 1.
+
+    Returns:
+        The sum of ``a`` and ``b``.
+    """
+    return a + b
+    '''
+
+    code, invoke_template = func2fastapi(ast.parse(src).body[0])
+    print(invoke_template.template)
+
     assert ast_eq(
         ast.parse(code),
-        ast.parse("""from fastapi import FastAPI, HTTPException
+        ast.parse('''from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
 
 # --- your function (kept as-is) ---
-def add2(a: int, b: int=1) -> int:
+def add2(a: int, b: int = 1) -> int:
+    """Adds two numbers.
+
+    Args:
+        a: First number.
+        b: Second number. Defaults to 1.
+
+    Returns:
+        The sum of ``a`` and ``b``.
+    """
     return a + b
 
 # --- auto-generated schemas ---
@@ -38,16 +58,43 @@ def add2_endpoint(payload: Add2Request):
         return Add2Response(result=result)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-"""),
+'''),
     )
-    assert code is not None
+
+    assert (
+        invoke_template.template
+        == '''def add2(a: int, b: int=1) -> int:
+    """Adds two numbers.
+
+    Args:
+        a: First number.
+        b: Second number. Defaults to 1.
+
+    Returns:
+        The sum of ``a`` and ``b``.
+    """
+    import requests
+    url = f'http://{{base_url}}/add2'
+    payload = {a: a, b: b}
+    response = requests.post(url, json=payload)
+    response.raise_for_status()
+    return response.json()['result']'''
+    )
 
 
 def test_cls2fastapi():
-    src = """
-class Adder:
+    src = '''class Adder:
 
     def add2(self, a: int, b: int = 1) -> int:
+        """Adds two numbers.
+
+        Args:
+            a: First number.
+            b: Second number. Defaults to 1.
+
+        Returns:
+            The sum of ``a`` and ``b``.
+        """
         return a + b
     
     def setup(self):
@@ -55,18 +102,29 @@ class Adder:
     
     def teardown(self):
         print("teardown called")
-    """
-    code = cls2fastapi(ast.parse(src), entry="add2", setup="setup", teardown="teardown")
-
+    '''
+    code, invoke_template = cls2fastapi(
+        ast.parse(src), entry="add2", setup="setup", teardown="teardown"
+    )
+    print(invoke_template.template)
     assert ast_eq(
         ast.parse(code),
-        ast.parse("""from fastapi import FastAPI, HTTPException
+        ast.parse('''from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 app = FastAPI()
 # --- your class (kept as-is) ---
 class Adder:
 
     def add2(self, a: int, b: int=1) -> int:
+        """Adds two numbers.
+
+        Args:
+            a: First number.
+            b: Second number. Defaults to 1.
+
+        Returns:
+            The sum of ``a`` and ``b``.
+        """
         return a + b
 
     def setup(self):
@@ -100,5 +158,34 @@ def adder_endpoint(payload: AdderRequest):
         return AdderResponse(result=result)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-"""),
+'''),
+    )
+    assert ast_eq(
+        ast.parse(invoke_template.template),
+        ast.parse('''
+class Adder:
+
+    def add2(self, a: int, b: int = 1) -> int:
+        """Adds two numbers.
+
+        Args:
+            a: First number.
+            b: Second number. Defaults to 1.
+
+        Returns:
+            The sum of ``a`` and ``b``.
+        """
+        import requests
+        url = f'http://{{base_url}}/adder'
+        payload = {a: a, b: b}
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        return response.json()['result']
+    
+    def setup(self):
+        print("setup called")
+    
+    def teardown(self):
+        print("teardown called")
+    '''),
     )

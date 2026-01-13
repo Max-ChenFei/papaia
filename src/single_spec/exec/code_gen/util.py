@@ -79,3 +79,17 @@ def extract_method(cls: ast.ClassDef, name) -> ast.FunctionDef:
     if method is None:
         raise ValueError(f"No method named `{name}` found in class `{cls.name}`.")
     return method
+
+
+def get_docstring_stmt(fn: ast.FunctionDef):
+    """Return the docstring statement node if present, else None."""
+    if not fn.body:
+        return None
+    first = fn.body[0]
+    if (
+        isinstance(first, ast.Expr)
+        and isinstance(first.value, ast.Constant)
+        and isinstance(first.value.value, str)
+    ):
+        return first
+    return None

@@ -7,7 +7,7 @@ def required(
     """Decorator to annotate runtime metadata for a function.
 
     Args:
-        env: Runtime environment string (e.g., "python:3.10").
+        env: docker image: (e.g., "python:3.12-slim").
         cpus: Number of CPUs at least.
         memory: Memory specification in GB at least.
         accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"

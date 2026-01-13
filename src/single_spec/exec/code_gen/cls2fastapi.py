@@ -1,17 +1,18 @@
 import ast
-
-from .util import extract_fields_and_call_args, extract_method
+from copy import deepcopy
+from string import Template
+from .util import extract_fields_and_call_args, extract_method, get_docstring_stmt
 
 
 def cls2fastapi(
-    mod: ast.AST,
+    cls: ast.AST,
     entry: str,
     setup: str | None = None,
     teardown: str | None = None,
 ) -> str:
     """Generate a FastAPI app template for the given class ast node."""
-    cls_src = ast.unparse(mod)
-    cls = next((n for n in mod.body if isinstance(n, ast.ClassDef)), None)
+    cls_src = ast.unparse(cls)
+    cls = next((n for n in cls.body if isinstance(n, ast.ClassDef)), None)
     if cls is None:
         raise ValueError("No top-level `class ...` found in the provided string.")
 
@@ -73,4 +74,30 @@ def {cls_name.lower()}_endpoint(payload: {req_model}):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 '''
-    return code
+
+    # Build payload dict for the invoke template
+    payload_items = ", ".join(
+        [f"{arg.arg}: {arg.arg}" for arg in entry_fn.args.args[1:]]
+    )
+
+    invoke = deepcopy(entry_fn)
+    doc_stmt = get_docstring_stmt(invoke)
+
+    new_body = ast.parse(f"""
+import requests
+url = f"http://{{{{base_url}}}}{route}"
+payload = {{{payload_items}}}
+response = requests.post(url, json=payload)
+response.raise_for_status()
+return response.json()["result"]""").body
+    invoke.body = ([doc_stmt] if doc_stmt is not None else []) + new_body
+    ast.fix_missing_locations(invoke)
+
+    invoke_cls = deepcopy(cls)
+    for i, node in enumerate(invoke_cls.body):
+        if isinstance(node, ast.FunctionDef) and node.name == entry:
+            invoke_cls.body[i] = invoke
+            break
+
+    invoke_template = Template(ast.unparse(invoke_cls))
+    return (code, invoke_template)

@@ -1,4 +1,5 @@
 import ast
+from string import Template
 
 from ...IR import Desc
 from .executor import Executor
@@ -9,10 +10,12 @@ class CurrentProcess(Executor):
         # no-op
         pass
 
-    def _generate_code(self, desc: Desc) -> ast.AST:
+    def _generate_code(self, desc: Desc) -> tuple[str | None, str]:
         """Return source code as-is since it runs in the same process."""
-        return desc.ast_node
+        return None, ast.unparse(desc.ast_node)
 
-    def _deploy(self, desc: Desc, generate_code: ast.AST) -> ast.AST:
+    def _deploy(
+        self, desc: Desc, generate_code: str | None, invoke_template: Template
+    ) -> str:
         """No deployment needed for in-process execution. Return the original source code."""
-        return generate_code
+        return invoke_template

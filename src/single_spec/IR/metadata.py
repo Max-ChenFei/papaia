@@ -10,7 +10,7 @@ class Metadata:
     """Runtime metadata for a function or class.
 
     Attributes:
-        env: Runtime environment.
+        env: Runtime environment (e.g., Docker image).
         resources: Resource requirements (cpus, memory, accel).
         entry: Entry method name for the class.
         setup: Setup method name for the class.

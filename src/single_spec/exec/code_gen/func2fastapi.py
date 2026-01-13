@@ -1,15 +1,14 @@
 import ast
+from copy import deepcopy
+from string import Template
 
-from .util import extract_fields_and_call_args
+from .util import extract_fields_and_call_args, get_docstring_stmt
 
 
-def func2fastapi(mod: ast.AST) -> str:
-    """Generate a FastAPI app template for the given function ast node."""
-    func_src = ast.unparse(mod)
-    fn = next((n for n in mod.body if isinstance(n, ast.FunctionDef)), None)
-    if fn is None:
-        raise ValueError("No top-level `def ...` found in the provided string.")
-
+def func2fastapi(fn: ast.FunctionDef) -> tuple[str, str]:
+    """Generate a FastAPI app template for the given function ast node and return the function
+    to call to invoke it."""
+    func_src = ast.unparse(fn)
     fn_name = fn.name
     route = f"/{fn_name}"
     fields, call_args, ret, needs_any = extract_fields_and_call_args(fn)
@@ -41,4 +40,21 @@ def {fn_name}_endpoint(payload: {req_model}):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 '''
-    return code
+
+    # Build payload dict for the invoke template
+    payload_items = ", ".join([f"{arg.arg}: {arg.arg}" for arg in fn.args.args])
+
+    invoke = deepcopy(fn)
+    doc_stmt = get_docstring_stmt(invoke)
+
+    new_body = ast.parse(f"""
+import requests
+url = f"http://{{{{base_url}}}}{route}"
+payload = {{{payload_items}}}
+response = requests.post(url, json=payload)
+response.raise_for_status()
+return response.json()["result"]""").body
+    invoke.body = ([doc_stmt] if doc_stmt is not None else []) + new_body
+    ast.fix_missing_locations(invoke)
+    invoke_template = Template(ast.unparse(invoke))
+    return (code, invoke_template)
