@@ -105,11 +105,7 @@ def start_fastapi_service(
     if accel_devices is not None and accel_devices != "":
         cmd.extend(["--gpus", f"device={accel_devices}"])
 
-    print("docker image pulled:", docker_image)
     run_cmd("docker", "pull", docker_image)
-    print("docker image pulled.")
-
-    print("start docker container")
     container_id = run_cmd(*cmd)
     if not container_id:
         raise RuntimeError("Failed to get container ID from docker run")
@@ -117,15 +113,14 @@ def start_fastapi_service(
     base_url = f"http://127.0.0.1:{host_port}"
     try:
         wait_for_container_ready(container_id, timeout_s=300)
-    except Exception:
+    except Exception as e:
         # if it didn't come up, stop container and re-raise
         try:
-            print("stopping failed container")
             run_cmd("docker", "rm", "-f", container_id)
         except Exception:
             pass
         td.cleanup()
-        raise RuntimeError("Service failed to start in Docker container")
+        raise RuntimeError(f"Service failed to start in Docker container: {e}")
 
     return ServiceHandle(
         container_id,
@@ -167,14 +162,13 @@ def run_cmd(*args: str) -> str:
 READY_RE = re.compile(r"Uvicorn running on http://0\.0\.0\.0:8000", re.IGNORECASE)
 ERROR_MARKERS = (
     "ERROR:",
-    "Traceback (most recent call last):",
     "Error loading ASGI app",
     "ModuleNotFoundError:",
     "ImportError:",
 )
 
 
-def wait_for_container_ready(container_id: str, timeout_s: int = 30) -> None:
+def wait_for_container_ready(container_id: str, timeout_s: int = 3000) -> None:
     """
     Stream `docker logs -f` until we see a readiness line, or an error line, or timeout.
     Raises RuntimeError on error/timeout.
@@ -193,9 +187,6 @@ def wait_for_container_ready(container_id: str, timeout_s: int = 30) -> None:
     tail = []  # keep last N lines for context
     try:
         for line in p.stdout:
-            # echo to console (optional)
-            print(line, end="")
-
             tail.append(line.rstrip("\n"))
             if len(tail) > 200:
                 tail.pop(0)
