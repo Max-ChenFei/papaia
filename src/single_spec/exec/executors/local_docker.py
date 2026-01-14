@@ -1,23 +1,35 @@
 import os
+import re
 import time
 import socket
 import tempfile
-import requests
-from asyncio import subprocess
+import subprocess
+import shutil
 from string import Template
+from dataclasses import dataclass, field
+from tempfile import TemporaryDirectory
 
-from ...IR import Desc
 from .another_process import AnotherProcess
+from ..nodes import Node
+from ...IR import Desc
 
 
+@dataclass
 class ServiceHandle:
-    def __init__(self, container_id: str, base_url: str, workdir: str):
-        self.container_id = container_id
-        self.base_url = base_url
-        self.workdir = workdir
+    container_id: str
+    base_url: str
+    src_dir: TemporaryDirectory = field(repr=False)
+    node: Node
+    accel_devices: str | None = None
 
-    def stop(self):
-        subprocess.run(["docker", "rm", "-f", self.container_id], check=False)
+    def stop(self) -> None:
+        try:
+            run_cmd("docker", "rm", "-f", self.container_id)
+        except Exception:
+            pass
+        self.src_dir.cleanup()
+        if self.accel_devices is not None:
+            self.node.release_accel_devices(self.accel_devices)
 
 
 class LocalDocker(AnotherProcess):
@@ -26,6 +38,7 @@ class LocalDocker(AnotherProcess):
     """
 
     services: dict[str, ServiceHandle] = {}
+    assigned_gpus: dict[int, bool] = {}
 
     def stop(self, name: str) -> None:
         service = self.services.get(name)
@@ -33,15 +46,106 @@ class LocalDocker(AnotherProcess):
             service.stop()
             del self.services[name]
 
-    def _deploy(self, desc: Desc, generate_code: str, invoke_template: Template) -> str:
-        service = start_service(
-            generate_code,
-            cpus=desc.resources.cpus,
-            memory=desc.resources.memory,
-            docker_image=desc.env,
-        )
+    def _deploy(
+        self,
+        desc: Desc,
+        generate_code: str,
+        invoke_template: Template,
+        node: Node,
+    ) -> str:
+        if shutil.which("docker") is None:
+            raise RuntimeError("Docker executable not found in PATH")
+
+        service = start_fastapi_service(generate_code, desc, node)
         self.services[desc.ast_node.name] = service
         return invoke_template.substitute(base_url=service.base_url)
+
+
+def start_fastapi_service(
+    service_code: str,
+    desc: Desc,
+    node: Node,
+) -> ServiceHandle:
+    docker_image = desc.env
+    cpus = desc.resources.cpus
+    memory = desc.resources.memory
+    accel_devices = accel_devices_from_node(desc, node)
+
+    td = tempfile.TemporaryDirectory()
+    run_path = os.path.join(td.name, "run.py")
+    with open(run_path, "w", encoding="utf-8") as f:
+        f.write(service_code)
+    mount_path = os.path.abspath(td.name)
+
+    # Simple "no-build" run: installs deps at container start (slow but easy)
+    host_port = pick_free_port()
+
+    cmd = [
+        "docker",
+        "run",
+        "-d",
+        "--rm",
+        "-p",
+        f"{host_port}:8000",
+        "--name",
+        f"svc_{host_port}",
+        "-v",
+        f"{mount_path}:/app",
+        "-w",
+        "/app",
+        f"{docker_image}",
+        "bash",
+        "-lc",
+        "ls -la /app && pip install fastapi uvicorn && uvicorn run:app --host 0.0.0.0 --port 8000",
+    ]
+    if cpus is not None and cpus > 0:
+        cmd.extend(["--cpus", str(cpus)])
+    if memory is not None and memory > 0:
+        cmd.extend(["--memory", f"{memory}m"])
+    if accel_devices is not None and accel_devices != "":
+        cmd.extend(["--gpus", f"device={accel_devices}"])
+
+    print("docker image pulled:", docker_image)
+    run_cmd("docker", "pull", docker_image)
+    print("docker image pulled.")
+
+    print("start docker container")
+    container_id = run_cmd(*cmd)
+    if not container_id:
+        raise RuntimeError("Failed to get container ID from docker run")
+
+    base_url = f"http://127.0.0.1:{host_port}"
+    try:
+        wait_for_container_ready(container_id, timeout_s=300)
+    except Exception:
+        # if it didn't come up, stop container and re-raise
+        try:
+            print("stopping failed container")
+            run_cmd("docker", "rm", "-f", container_id)
+        except Exception:
+            pass
+        td.cleanup()
+        raise RuntimeError("Service failed to start in Docker container")
+
+    return ServiceHandle(
+        container_id,
+        base_url,
+        td,
+        node,
+        accel_devices,
+    )
+
+
+def accel_devices_from_node(desc: Desc, node: Node) -> str | None:
+    if (
+        desc.resources.accel_type is not None
+        and desc.resources.accel_count is not None
+        and desc.resources.accel_count > 0
+    ):
+        accel_devices = node.get_accel_devices(desc.resources.accel_count)
+    else:
+        accel_devices = None
+    return accel_devices
 
 
 def pick_free_port() -> int:
@@ -52,53 +156,79 @@ def pick_free_port() -> int:
     return port
 
 
-def wait_up(base_url: str, timeout_s: int = 20):
+def run_cmd(*args: str) -> str:
+    """Run a command (blocking) and return stdout; raise on non-zero exit."""
+    cp = subprocess.run(args, text=True, capture_output=True)
+    if cp.returncode != 0:
+        raise RuntimeError(f"Command failed ({cp.returncode}): {' '.join(args)}")
+    return cp.stdout.strip()
+
+
+READY_RE = re.compile(r"Uvicorn running on http://0\.0\.0\.0:8000", re.IGNORECASE)
+ERROR_MARKERS = (
+    "ERROR:",
+    "Traceback (most recent call last):",
+    "Error loading ASGI app",
+    "ModuleNotFoundError:",
+    "ImportError:",
+)
+
+
+def wait_for_container_ready(container_id: str, timeout_s: int = 30) -> None:
+    """
+    Stream `docker logs -f` until we see a readiness line, or an error line, or timeout.
+    Raises RuntimeError on error/timeout.
+    """
+    p = subprocess.Popen(
+        ["docker", "logs", "-f", container_id],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        bufsize=1,
+    )
+
     start = time.time()
-    while True:
-        try:
-            r = requests.get(base_url + "/docs", timeout=1)
-            if r.status_code in (200, 404):
+    tail = []  # keep last N lines for context
+    try:
+        for line in p.stdout:
+            # echo to console (optional)
+            print(line, end="")
+
+            tail.append(line.rstrip("\n"))
+            if len(tail) > 200:
+                tail.pop(0)
+
+            # detect readiness
+            if READY_RE.search(line):
                 return
-        except Exception:
-            pass
-        if time.time() - start > timeout_s:
-            raise TimeoutError(f"Service not up: {base_url}")
-        time.sleep(0.3)
 
+            # detect common errors
+            if any(m in line for m in ERROR_MARKERS):
+                raise RuntimeError(
+                    "Service failed to start. Logs:\n" + "\n".join(tail[-80:])
+                )
 
-def start_service(service_code: str, cpus, memory, docker_image) -> ServiceHandle:
-    td = tempfile.TemporaryDirectory()
-    run_path = os.path.join(td.name, "run.py")
-    with open(run_path, "w", encoding="utf-8") as f:
-        f.write(service_code)
+            # timeout check
+            if time.time() - start > timeout_s:
+                raise RuntimeError(
+                    f"Timed out waiting for service to start after {timeout_s:.1f}s. Logs:\n"
+                    + "\n".join(tail[-80:])
+                )
 
-    host_port = pick_free_port()
+        # If we exit the loop, docker logs ended (container exited)
+        rc = p.wait(timeout=2)
+        raise RuntimeError(
+            f"Container exited before becoming ready (docker logs ended, rc={rc}). Logs:\n"
+            + "\n".join(tail[-80:])
+        )
 
-    # Simple "no-build" run: installs deps at container start (slow but easy)
-    cmd = [
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        "--cpus",
-        f"{cpus}",
-        "--memory",
-        f"{memory}m",
-        "-p",
-        f"{host_port}:8000",
-        "--name",
-        f"svc_{host_port}",
-        "-v",
-        f"{td.name}:/app:ro",
-        "-w",
-        "/app",
-        f"{docker_image}",
-        "bash",
-        "-lc",
-        "pip install -q fastapi uvicorn && uvicorn run:app --host 0.0.0.0 --port 8000",
-    ]
-    container_id = subprocess.check_output(cmd, text=True).strip()
-    base_url = f"http://127.0.0.1:{host_port}"
-
-    wait_up(base_url)
-    return ServiceHandle(container_id, base_url, td)
+    finally:
+        # stop following logs if still running
+        if p.poll() is None:
+            p.terminate()
+            try:
+                p.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                p.kill()

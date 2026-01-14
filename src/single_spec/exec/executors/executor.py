@@ -1,14 +1,15 @@
-from abc import ABC, abstractmethod
 import ast
 from string import Template
+from abc import ABC, abstractmethod
 
+from ..nodes import Node
 from ...IR import Desc
 
 
 class Executor(ABC):
-    def run(self, desc: Desc) -> ast.AST:
+    def run(self, desc: Desc, node: Node) -> ast.AST:
         code, invoke_template = self._generate_code(desc)
-        return ast.parse(self._deploy(desc, code, invoke_template))
+        return ast.parse(self._deploy(desc, code, invoke_template, node))
 
     @abstractmethod
     def stop(self, name: str) -> None:
@@ -22,7 +23,11 @@ class Executor(ABC):
 
     @abstractmethod
     def _deploy(
-        self, desc: Desc, generate_code: str | None, invoke_template: Template
+        self,
+        desc: Desc,
+        generate_code: str | None,
+        invoke_template: Template,
+        node: Node,
     ) -> str:
         """Deploy artifact and return an access stub, make sure to keep the same signature."""
         raise NotImplementedError

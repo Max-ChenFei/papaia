@@ -20,7 +20,6 @@ def add2(a: int, b: int = 1) -> int:
     '''
 
     code, invoke_template = func2fastapi(ast.parse(src).body[0])
-    print(invoke_template.template)
 
     assert ast_eq(
         ast.parse(code),
@@ -74,8 +73,8 @@ def add2_endpoint(payload: Add2Request):
         The sum of ``a`` and ``b``.
     """
     import requests
-    url = f'http://{{base_url}}/add2'
-    payload = {a: a, b: b}
+    url = f'$base_url//add2'
+    payload = {'a': a, 'b': b}
     response = requests.post(url, json=payload)
     response.raise_for_status()
     return response.json()['result']'''
@@ -104,9 +103,8 @@ def test_cls2fastapi():
         print("teardown called")
     '''
     code, invoke_template = cls2fastapi(
-        ast.parse(src), entry="add2", setup="setup", teardown="teardown"
+        ast.parse(src).body[0], entry="add2", setup="setup", teardown="teardown"
     )
-    print(invoke_template.template)
     assert ast_eq(
         ast.parse(code),
         ast.parse('''from fastapi import FastAPI, HTTPException
@@ -176,8 +174,8 @@ class Adder:
             The sum of ``a`` and ``b``.
         """
         import requests
-        url = f'http://{{base_url}}/adder'
-        payload = {a: a, b: b}
+        url = f'$base_url//adder'
+        payload = {'a': a, 'b': b}
         response = requests.post(url, json=payload)
         response.raise_for_status()
         return response.json()['result']

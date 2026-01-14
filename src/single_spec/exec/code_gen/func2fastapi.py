@@ -42,14 +42,14 @@ def {fn_name}_endpoint(payload: {req_model}):
 '''
 
     # Build payload dict for the invoke template
-    payload_items = ", ".join([f"{arg.arg}: {arg.arg}" for arg in fn.args.args])
+    payload_items = ", ".join([f'"{arg.arg}": {arg.arg}' for arg in fn.args.args])
 
     invoke = deepcopy(fn)
     doc_stmt = get_docstring_stmt(invoke)
 
     new_body = ast.parse(f"""
 import requests
-url = f"http://{{{{base_url}}}}{route}"
+url = f"$base_url/{route}"
 payload = {{{payload_items}}}
 response = requests.post(url, json=payload)
 response.raise_for_status()

@@ -1,16 +1,53 @@
 import tomllib
-from dataclasses import dataclass
 from pathlib import Path
 
 
-@dataclass(frozen=True)
 class Node:
-    name: str
-    backend: str
-    cpus: int | None = 0
-    memory: int | None = 0
-    accel_type: str | None = None
-    accel_count: int | None = 0
+    def __init__(
+        self,
+        name: str,
+        executor: str,
+        cpus: int | None = None,
+        memory: int | None = None,
+        accel_type: str | None = None,
+        accel_count: int | None = None,
+    ):
+        self.name = name
+        self.executor = executor
+        self.cpus = cpus
+        self.memory = memory
+        self.accel_type = accel_type
+        self.accel_count = accel_count  # id from 0 to N-1
+
+        self.accel_assignment: dict[str, list] = {}  # e.g., {"task1": [0,1]}
+        self.accel_assigned = [False] * (accel_count or 0)
+
+    def get_accel_devices(self, count) -> str | None:
+        if (
+            self.accel_type is None
+            or self.accel_count is None
+            or self.accel_count == 0
+            or count > self.accel_count
+        ):
+            return None
+        devices = []
+        for i in range(self.accel_count):
+            if not self.accel_assigned[i]:
+                devices.append(str(i))
+                self.accel_assigned[i] = True
+            if len(devices) >= count:
+                break
+        if len(devices) < count:
+            raise RuntimeError(
+                f"Not enough available accelerators on node {self.name}."
+            )
+
+        return ",".join(devices)
+
+    def release_accel_devices(self, devices: str) -> None:
+        for dev in devices.split(","):
+            idx = int(dev)
+            self.accel_assigned[idx] = False
 
 
 EXEC_NODE_CONFIG_FILENAME = "exec_nodes.toml"
@@ -44,7 +81,7 @@ def available_nodes() -> tuple[list[Node], int | None]:
         nodes.append(
             Node(
                 name=name,
-                backend=cfg.get("backend"),
+                executor=cfg.get("executor"),
                 cpus=cfg.get("cpus"),
                 memory=cfg.get("memory"),
                 accel_type=accel_type,

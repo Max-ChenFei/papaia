@@ -35,7 +35,7 @@ def test_place_all_local(tasks):
     nodes = [
         Node(
             name="local",
-            backend="",
+            executor="",
             cpus=8,
             memory=16,
             accel_type="A100",
@@ -43,7 +43,7 @@ def test_place_all_local(tasks):
         ),  # orchestrator here maybe
         Node(
             name="gpu_k8s",
-            backend="",
+            executor="",
             cpus=32,
             memory=128,
             accel_type="A100",
@@ -51,7 +51,7 @@ def test_place_all_local(tasks):
         ),
         Node(
             name="gpu_2",
-            backend="",
+            executor="",
             cpus=16,
             memory=64,
             accel_type="A100",
@@ -59,7 +59,6 @@ def test_place_all_local(tasks):
         ),
     ]
     assignment_result = assignment(tasks, nodes, local_index=0, time_limit_s=10.0)
-    print("assignment:", assignment_result)
     assert assignment_result == {0: 0, 1: 0, 2: 0}
 
 
@@ -67,7 +66,7 @@ def test_place_mixed(tasks):
     nodes = [
         Node(
             name="local",
-            backend="",
+            executor="",
             cpus=4,
             memory=8,
             accel_type="A100",
@@ -75,7 +74,7 @@ def test_place_mixed(tasks):
         ),  # orchestrator here maybe
         Node(
             name="gpu_k8s",
-            backend="",
+            executor="",
             cpus=32,
             memory=128,
             accel_type="A100",
@@ -83,7 +82,7 @@ def test_place_mixed(tasks):
         ),
         Node(
             name="gpu_2",
-            backend="",
+            executor="",
             cpus=16,
             memory=64,
             accel_type="A100",
@@ -91,7 +90,6 @@ def test_place_mixed(tasks):
         ),
     ]
     assignment_result = assignment(tasks, nodes, local_index=0, time_limit_s=10.0)
-    print("assignment:", assignment_result)
     assert assignment_result == {0: 0, 1: 1, 2: 0}
 
 
@@ -99,7 +97,7 @@ def test_place_less_nodes(tasks):
     nodes = [
         Node(
             name="local",
-            backend="",
+            executor="",
             cpus=2,
             memory=2,
             accel_type="A100",
@@ -107,7 +105,7 @@ def test_place_less_nodes(tasks):
         ),  # orchestrator here maybe
         Node(
             name="gpu_k8s",
-            backend="",
+            executor="",
             cpus=32,
             memory=128,
             accel_type="A100",
@@ -115,7 +113,7 @@ def test_place_less_nodes(tasks):
         ),
         Node(
             name="gpu_2",
-            backend="",
+            executor="",
             cpus=16,
             memory=64,
             accel_type="A100",
@@ -123,5 +121,4 @@ def test_place_less_nodes(tasks):
         ),
     ]
     assignment_result = assignment(tasks, nodes, local_index=0, time_limit_s=10.0)
-    print("assignment:", assignment_result)
     assert assignment_result == {0: 2, 1: 2, 2: 0}

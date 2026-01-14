@@ -1,6 +1,7 @@
 import ast
 from copy import deepcopy
 from string import Template
+
 from .util import extract_fields_and_call_args, extract_method, get_docstring_stmt
 
 
@@ -12,10 +13,6 @@ def cls2fastapi(
 ) -> str:
     """Generate a FastAPI app template for the given class ast node."""
     cls_src = ast.unparse(cls)
-    cls = next((n for n in cls.body if isinstance(n, ast.ClassDef)), None)
-    if cls is None:
-        raise ValueError("No top-level `class ...` found in the provided string.")
-
     cls_name = cls.name
     route = f"/{cls_name.lower()}"
 
@@ -77,7 +74,7 @@ def {cls_name.lower()}_endpoint(payload: {req_model}):
 
     # Build payload dict for the invoke template
     payload_items = ", ".join(
-        [f"{arg.arg}: {arg.arg}" for arg in entry_fn.args.args[1:]]
+        [f'"{arg.arg}": {arg.arg}' for arg in entry_fn.args.args[1:]]
     )
 
     invoke = deepcopy(entry_fn)
@@ -85,7 +82,7 @@ def {cls_name.lower()}_endpoint(payload: {req_model}):
 
     new_body = ast.parse(f"""
 import requests
-url = f"http://{{{{base_url}}}}{route}"
+url = f"$base_url/{route}"
 payload = {{{payload_items}}}
 response = requests.post(url, json=payload)
 response.raise_for_status()

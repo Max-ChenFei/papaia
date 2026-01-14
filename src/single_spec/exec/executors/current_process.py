@@ -1,8 +1,9 @@
 import ast
 from string import Template
 
-from ...IR import Desc
 from .executor import Executor
+from ..nodes import Node
+from ...IR import Desc
 
 
 class CurrentProcess(Executor):
@@ -15,7 +16,11 @@ class CurrentProcess(Executor):
         return None, ast.unparse(desc.ast_node)
 
     def _deploy(
-        self, desc: Desc, generate_code: str | None, invoke_template: Template
+        self,
+        desc: Desc,
+        generate_code: str | None,
+        invoke_template: Template,
+        node: Node,
     ) -> str:
         """No deployment needed for in-process execution. Return the original source code."""
         return invoke_template

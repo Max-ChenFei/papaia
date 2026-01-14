@@ -1,10 +1,10 @@
 import ast
-from ortools.sat.python import cp_model
 from typing import Dict, Tuple
+
+from ortools.sat.python import cp_model
 
 from .executors import get_executor_by_name, Executor
 from .nodes import available_nodes, Node
-
 from ..IR import Desc
 
 
@@ -23,8 +23,9 @@ def place_on_exec_sites(
         executor_instance = get_executor_by_name(
             node.name, list(descs.values())[i].env is not None
         )
-        stub_ast[i] = executor_instance.run(descs[names[i]])
-        executor[i] = executor_instance
+        name = names[i]
+        stub_ast[name] = executor_instance.run(descs[name], node)
+        executor[name] = executor_instance
     return stub_ast, executor
 
 
