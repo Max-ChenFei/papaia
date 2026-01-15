@@ -12,9 +12,9 @@ def cls2fastapi(
     teardown: str | None = None,
 ) -> str:
     """Generate a FastAPI app template for the given class ast node and return the code template to invoke it."""
-    # Use a copy of the class without decorators when generating the FastAPI code
     cls_no_decorators = deepcopy(cls)
-    cls_no_decorators.decorator_list = []
+    cls_no_decorators.decorator_list = []  # remove decorators
+    cls_no_decorators.bases = []  # remove the child inheritance
     cls_src = ast.unparse(cls_no_decorators)
 
     cls_name = cls.name

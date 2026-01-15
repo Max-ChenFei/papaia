@@ -82,7 +82,7 @@ def add2_endpoint(payload: Add2Request):
 
 
 def test_cls2fastapi():
-    src = '''class Adder:
+    src = '''class Adder(BaseTool):
 
     def add2(self, a: int, b: int = 1) -> int:
         """Adds two numbers.
@@ -161,7 +161,7 @@ def adder_endpoint(payload: AdderRequest):
     assert ast_eq(
         ast.parse(invoke_template.template),
         ast.parse('''
-class Adder:
+class Adder(BaseTool):
 
     def add2(self, a: int, b: int = 1) -> int:
         """Adds two numbers.
