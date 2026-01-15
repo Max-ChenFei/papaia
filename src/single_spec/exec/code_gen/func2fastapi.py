@@ -6,9 +6,12 @@ from .util import extract_fields_and_call_args, get_docstring_stmt
 
 
 def func2fastapi(fn: ast.FunctionDef) -> tuple[str, str]:
-    """Generate a FastAPI app template for the given function ast node and return the function
-    to call to invoke it."""
-    func_src = ast.unparse(fn)
+    """Generate a FastAPI app template for the given function ast node and return the code template to invoke it."""
+    # Use a copy of the function without decorators when generating the FastAPI code
+    fn_no_decorators = deepcopy(fn)
+    fn_no_decorators.decorator_list = []
+    func_src = ast.unparse(fn_no_decorators)
+
     fn_name = fn.name
     route = f"/{fn_name}"
     fields, call_args, ret, needs_any = extract_fields_and_call_args(fn)

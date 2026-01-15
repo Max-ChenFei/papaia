@@ -11,11 +11,14 @@ def cls2fastapi(
     setup: str | None = None,
     teardown: str | None = None,
 ) -> str:
-    """Generate a FastAPI app template for the given class ast node."""
-    cls_src = ast.unparse(cls)
+    """Generate a FastAPI app template for the given class ast node and return the code template to invoke it."""
+    # Use a copy of the class without decorators when generating the FastAPI code
+    cls_no_decorators = deepcopy(cls)
+    cls_no_decorators.decorator_list = []
+    cls_src = ast.unparse(cls_no_decorators)
+
     cls_name = cls.name
     route = f"/{cls_name.lower()}"
-
     entry_fn = extract_method(cls, entry)
     fields, call_args, ret, needs_any = extract_fields_and_call_args(
         entry_fn, is_class_method=True
