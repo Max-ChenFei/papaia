@@ -66,7 +66,7 @@ def start_fastapi_service(
     desc: Desc,
     node: Node,
 ) -> ServiceHandle:
-    docker_image = desc.env
+    docker_image = desc.env if isinstance(desc.env, str) else desc.env[0]
     cpus = desc.resources.cpus
     memory = desc.resources.memory
     accel_devices = accel_devices_from_node(desc, node)
@@ -96,7 +96,7 @@ def start_fastapi_service(
         f"{docker_image}",
         "bash",
         "-lc",
-        "ls -la /app && pip install fastapi uvicorn && uvicorn run:app --host 0.0.0.0 --port 8000",
+        f"ls -la /app && pip install fastapi uvicorn {' '.join(desc.env[1]) if isinstance(desc.env, tuple) and desc.env[1] is not None else ''} && uvicorn run:app --host 0.0.0.0 --port 8000",
     ]
     if cpus is not None and cpus > 0:
         cmd.extend(["--cpus", str(cpus)])

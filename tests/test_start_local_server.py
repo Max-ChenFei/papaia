@@ -101,6 +101,65 @@ def add2_endpoint(payload: Add2Request):
     os.chdir(original_dir)
 
 
+def test_start_local_server_extral_packages():
+    original_dir = os.getcwd()
+    code = '''from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI()
+
+# --- your function (kept as-is) ---
+def add2(a: int, b: int = 1) -> int:
+    """Adds two numbers.
+
+    Args:
+        a: First number.
+        b: Second number. Defaults to 1.
+
+    Returns:
+        The sum of ``a`` and ``b``.
+    """
+    return a + b
+
+# --- auto-generated schemas ---
+class Add2Request(BaseModel):
+    a: int
+    b: int = 1
+
+class Add2Response(BaseModel):
+    result: int
+
+# --- auto-generated endpoint ---
+@app.post("/add2", response_model=Add2Response)
+def add2_endpoint(payload: Add2Request):
+    try:
+        import numpy as np  # extra package test
+        result = add2(payload.a, payload.b)
+        return Add2Response(result=result)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))'''
+    os.chdir(Path(__file__).parent)
+    exec_nodes, local_index = available_nodes()
+    node = exec_nodes[local_index]
+    service = start_fastapi_service(
+        code,
+        Desc(
+            ast.parse(code).body,
+            Metadata(env=("python:3.9-slim", ["numpy"]), resources=Resources()),
+        ),
+        node,
+    )
+    response = requests.post(
+        f"{service.base_url}/add2",
+        json={"a": 3, "b": 4},
+    )
+    assert response.status_code == 200
+    assert response.json().get("result") == 7, f"Unexpected response: {response.text}"
+
+    service.stop()
+    os.chdir(original_dir)
+
+
 def test_start_local_server_fail():
     original_dir = os.getcwd()
     code = """from fastapi import FastAPI, HTTPException

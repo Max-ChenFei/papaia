@@ -1,6 +1,2 @@
-from typing import TypeAlias
-
-Image: TypeAlias = str  # Docker image reference (e.g., "python:3.12-slim") used for pulling from Docker Hub.
-
-
-Env = Image  # docker image
+# container_image or (container_image, pip_packages) e.g., ("python:3.10-slim", ["fastapi", "uvicorn"])
+Env = str | tuple[str | None, list[str] | None]
