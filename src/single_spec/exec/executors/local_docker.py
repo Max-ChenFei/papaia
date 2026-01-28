@@ -55,7 +55,6 @@ class LocalDocker(AnotherProcess):
     ) -> str:
         if shutil.which("docker") is None:
             raise RuntimeError("Docker executable not found in PATH")
-
         service = start_fastapi_service(generate_code, desc, node)
         self.services[desc.ast_node.name] = service
         return invoke_template.substitute(base_url=service.base_url)
@@ -112,7 +111,7 @@ def start_fastapi_service(
 
     base_url = f"http://127.0.0.1:{host_port}"
     try:
-        wait_for_container_ready(container_id, timeout_s=300)
+        wait_for_container_ready(container_id, timeout_s=3000)
     except Exception as e:
         # if it didn't come up, stop container and re-raise
         try:
