@@ -13,7 +13,9 @@ class CurrentProcess(Executor):
 
     def _generate_code(self, desc: Desc) -> tuple[str | None, str]:
         """Return source code as-is since it runs in the same process."""
-        return None, ast.unparse(desc.ast_node)
+        return None, "\n".join(
+            [ast.unparse(imp) for imp in desc.imports]
+        ) + "\n" + ast.unparse(desc.ast_node)
 
     def _deploy(
         self,

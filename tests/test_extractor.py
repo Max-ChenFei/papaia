@@ -102,3 +102,37 @@ class MyClass:
     assert desc.metadata.env == "python:3.10"
     assert desc.metadata.resources.accel_type == "A100"
     assert desc.metadata.resources.accel_count == 2
+
+
+def test_extract_desc_from_def_imports():
+    source = """import torch
+import requests
+from PIL import Image
+from typing import List
+from single_spec import required
+
+@required(env="python:3.10", accel="A100:2")
+def my_function():
+    a: List[int] = [1, 2, 3]
+    print("Using torch:", torch.__version__)
+    print("Using PIL:", Image.__name__)
+    """
+    ast_node = ast.parse(source)
+    descs = extract_desc(ast_node)
+
+    desc = descs["my_function"]
+    assert ast_eq(
+        desc.ast_node,
+        ast.parse("""def my_function():
+    a: List[int] = [1, 2, 3]
+    print('Using torch:', torch.__version__)
+    print('Using PIL:', Image.__name__)""").body[0],
+    )
+    assert desc.metadata.env == "python:3.10"
+    assert desc.metadata.resources.accel_type == "A100"
+    assert desc.metadata.resources.accel_count == 2
+    assert set(desc.imports) == {
+        "import torch",
+        "from PIL import Image",
+        "from typing import List",
+    }

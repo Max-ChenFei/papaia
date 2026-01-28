@@ -1,5 +1,7 @@
 import ast
 import copy
+import tempfile
+import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -68,3 +70,27 @@ def write_ast(mod: ast.Module, file_path: Path):
 def delete_file(file_path: Path):
     if file_path.exists():
         file_path.unlink()
+
+
+def ruff_fix(file_path: Path):
+    subprocess.run(
+        ["ruff", "check", str(file_path), "--fix"],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def read_file(file_path: Path) -> str:
+    return file_path.read_text(encoding="utf-8")
+
+
+def merge(node: ast.AST, all_imports: list[ast.stmt]) -> str:
+    """merge the code and remove unused imports."""
+    mod = ast.Module(body=all_imports + [node], type_ignores=[])
+    with tempfile.TemporaryDirectory() as tmpdir:
+        file_path = Path(tmpdir) / "temp.py"
+        write_ast(mod, file_path)
+        # Let ruff remove unused imports
+        ruff_fix(file_path)
+        return read_file(file_path)

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .IR import extract_desc
 from .exec import place_on_exec_sites
-from .utils import read_ast, update_ast, write_ast, delete_file
+from .utils import read_ast, update_ast, write_ast, delete_file, ruff_fix
 
 
 def compile_and_run(file_path: Path):
@@ -13,7 +13,7 @@ def compile_and_run(file_path: Path):
     new_ast = update_ast(raw_ast, stub_ast)
     compiled_file_path = file_path.with_name(file_path.stem + "_compiled.py")
     write_ast(new_ast, compiled_file_path)
-
+    ruff_fix(compiled_file_path)
     try:
         runpy.run_path(str(compiled_file_path))
     finally:

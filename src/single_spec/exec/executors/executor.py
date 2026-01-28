@@ -4,11 +4,14 @@ from abc import ABC, abstractmethod
 
 from ..nodes import Node
 from ...IR import Desc
+from ...utils import merge
 
 
 class Executor(ABC):
     def run(self, desc: Desc, node: Node) -> ast.AST:
         code, invoke_template = self._generate_code(desc)
+        if desc.imports and code is not None:
+            code = merge(ast.parse(code), desc.imports)
         return ast.parse(self._deploy(desc, code, invoke_template, node))
 
     @abstractmethod
