@@ -7,8 +7,21 @@ from typing import List, Any, Dict
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
 from langchain.agents import create_agent
+from single_spec import required_cls
 
 
+@required_cls(
+    env=(
+        "python:3.10-slim",
+        [
+            "torch --extra-index-url https://download.pytorch.org/whl/cu124",
+            "transformers",
+            "Pillow",
+            "requests",
+        ],
+    ),
+    entry="_run",
+)
 class Grounding(BaseTool):
     name: str = "grounding"
     description: str = "Return bounding boxes for target entities in the image."
@@ -25,7 +38,6 @@ class Grounding(BaseTool):
             },
         },
         "required": ["image_url", "labels"],
-        "additionalProperties": False,
     }
     _detector: Any = None
 
@@ -64,3 +76,9 @@ agent = create_agent(
     tools=[Grounding()],
     system_prompt="You are a helpful assistant.",
 )
+
+# Agent run test
+image_url = "http://images.cocodataset.org/val2017/000000039769.jpg"
+prompt = f"Call the grounding tool now.\n Use image_url = {image_url}\n labels=['cat'], threshold=0.3."
+result = agent.invoke({"messages": [{"role": "user", "content": prompt}]})
+print(result["messages"][-1].content)
