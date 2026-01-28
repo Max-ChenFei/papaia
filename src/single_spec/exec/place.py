@@ -21,7 +21,7 @@ def place_on_exec_sites(
     for i, node_index in plan.items():
         node = exec_nodes[node_index]
         executor_instance = get_executor_by_name(
-            node.name, list(descs.values())[i].env is not None
+            node.executor, list(descs.values())[i].env is not None
         )
         name = names[i]
         stub_ast[name] = executor_instance.run(descs[name], node)
