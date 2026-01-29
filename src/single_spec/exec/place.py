@@ -4,8 +4,7 @@ from typing import Dict, Tuple
 from ortools.sat.python import cp_model
 
 from .executors import get_executor_by_name, Executor
-from .nodes import available_nodes, Node
-from ..IR import Desc
+from ..IR import Desc, available_nodes, Node
 
 
 def place_on_exec_sites(
@@ -18,13 +17,16 @@ def place_on_exec_sites(
     stub_ast = {}
     executor = {}
     names = list(descs.keys())
+    values = list(descs.values())
     for i, node_index in plan.items():
-        node = exec_nodes[node_index]
-        executor_instance = get_executor_by_name(
-            node.executor, list(descs.values())[i].env is not None
-        )
         name = names[i]
-        stub_ast[name] = executor_instance.run(descs[name], node)
+        desc = values[i]
+        node = exec_nodes[node_index]
+        desc.assigned_node = node
+        desc.assigned_accel_devices = node.get_accel_devices(desc.resources.accel_count)
+        executor_instance = get_executor_by_name(node.executor, desc.env is not None)
+
+        stub_ast[name] = executor_instance.run(desc)
         executor[name] = executor_instance
     return stub_ast, executor
 
@@ -138,9 +140,9 @@ def candidate_nodes(tasks: list, nodes: list[Node]) -> list[list[int]]:
                     cand.append(j)
 
         if not cand:
-            available = ", ".join(str(node) for node in nodes)
+            available = "\n".join(str(node) for node in nodes)
             raise ValueError(
-                f"No feasible node for {t.ast_node.name} with {r}. Current available nodes: {available}"
+                f"No feasible node for {t.ast_node.name} with {r}.\nCurrent available nodes: \n{available}"
             )
         J_i.append(cand)
     return J_i

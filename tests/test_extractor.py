@@ -131,8 +131,5 @@ def my_function():
     assert desc.metadata.env == "python:3.10"
     assert desc.metadata.resources.accel_type == "A100"
     assert desc.metadata.resources.accel_count == 2
-    assert set(desc.imports) == {
-        "import torch",
-        "from PIL import Image",
-        "from typing import List",
-    }
+    for imp, original_imp in zip(desc.imports, ast.parse(source).body[:5].__iter__()):
+        assert ast_eq(imp, original_imp)

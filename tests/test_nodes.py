@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from single_spec import available_nodes, Node
+from single_spec.IR import available_nodes, Node
 
 
 def test_available_exec_nodes_empty():

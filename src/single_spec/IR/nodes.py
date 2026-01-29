@@ -22,6 +22,13 @@ class Node:
         self.accel_assignment: dict[str, list] = {}  # e.g., {"task1": [0,1]}
         self.accel_assigned = [False] * (accel_count or 0)
 
+    def __str__(self):
+        return (
+            f"Node(name={self.name}, executor={self.executor}, cpus={self.cpus}, "
+            f"memory={self.memory}, accel_type={self.accel_type}, "
+            f"accel_count={self.accel_count})"
+        )
+
     def get_accel_devices(self, count) -> str | None:
         if (
             self.accel_type is None

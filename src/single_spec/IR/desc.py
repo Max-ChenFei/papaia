@@ -10,13 +10,16 @@ from ..utils import (
     split_decorator,
     update_decorator_list,
 )
+from .nodes import Node
 
 
 @dataclass
 class Desc:
-    imports: list[str] | None
     ast_node: ast.AST
     metadata: Metadata
+    imports: list[ast.Import | ast.ImportFrom] | None = None
+    assigned_node: Node | None = None
+    assigned_accel_devices: str | None = None
 
     @property
     def resources(self) -> Resources:

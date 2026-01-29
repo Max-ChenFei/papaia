@@ -2,7 +2,6 @@ import ast
 from string import Template
 
 from .executor import Executor
-from ..nodes import Node
 from ..code_gen import func2fastapi, cls2fastapi
 from ...IR import Desc
 
@@ -11,9 +10,6 @@ class AnotherProcess(Executor):
     """
     execution in another execution environments (e.g., Docker, remote servers), not same as the CurrentProcess.
     """
-
-    def stop(self, name: str) -> None:
-        pass
 
     def _generate_code(self, desc: Desc) -> tuple[str, str]:
         if isinstance(desc.ast_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -30,11 +26,5 @@ class AnotherProcess(Executor):
                 f"Unsupported AST node type: {type(desc.ast_node)}"
             )
 
-    def _deploy(
-        self,
-        desc: Desc,
-        generate_code: str,
-        invoke_template: Template,
-        node: Node,
-    ) -> str:
+    def _deploy(self, desc: Desc, generate_code: str, invoke_template: Template) -> str:
         raise NotImplementedError

@@ -10,8 +10,7 @@ from dataclasses import dataclass, field
 from tempfile import TemporaryDirectory
 
 from .another_process import AnotherProcess
-from ..nodes import Node
-from ...IR import Desc
+from ...IR import Desc, Node
 
 
 @dataclass
@@ -19,8 +18,6 @@ class ServiceHandle:
     container_id: str
     base_url: str
     src_dir: TemporaryDirectory = field(repr=False)
-    node: Node
-    accel_devices: str | None = None
 
     def stop(self) -> None:
         try:
@@ -28,8 +25,6 @@ class ServiceHandle:
         except Exception:
             pass
         self.src_dir.cleanup()
-        if self.accel_devices is not None:
-            self.node.release_accel_devices(self.accel_devices)
 
 
 class LocalDocker(AnotherProcess):
@@ -41,21 +36,16 @@ class LocalDocker(AnotherProcess):
     assigned_gpus: dict[int, bool] = {}
 
     def stop(self, name: str) -> None:
+        super().stop(name)
         service = self.services.get(name)
         if service:
             service.stop()
             del self.services[name]
 
-    def _deploy(
-        self,
-        desc: Desc,
-        generate_code: str,
-        invoke_template: Template,
-        node: Node,
-    ) -> str:
+    def _deploy(self, desc: Desc, generate_code: str, invoke_template: Template) -> str:
         if shutil.which("docker") is None:
             raise RuntimeError("Docker executable not found in PATH")
-        service = start_fastapi_service(generate_code, desc, node)
+        service = start_fastapi_service(generate_code, desc)
         self.services[desc.ast_node.name] = service
         return invoke_template.substitute(base_url=service.base_url)
 
@@ -63,12 +53,10 @@ class LocalDocker(AnotherProcess):
 def start_fastapi_service(
     service_code: str,
     desc: Desc,
-    node: Node,
 ) -> ServiceHandle:
     docker_image = desc.env if isinstance(desc.env, str) else desc.env[0]
     cpus = desc.resources.cpus
     memory = desc.resources.memory
-    accel_devices = accel_devices_from_node(desc, node)
 
     td = tempfile.TemporaryDirectory()
     run_path = os.path.join(td.name, "run.py")
@@ -101,8 +89,6 @@ def start_fastapi_service(
         cmd.extend(["--cpus", str(cpus)])
     if memory is not None and memory > 0:
         cmd.extend(["--memory", f"{memory}m"])
-    if accel_devices is not None and accel_devices != "":
-        cmd.extend(["--gpus", f"device={accel_devices}"])
 
     run_cmd("docker", "pull", docker_image)
     container_id = run_cmd(*cmd)
@@ -121,13 +107,7 @@ def start_fastapi_service(
         td.cleanup()
         raise RuntimeError(f"Service failed to start in Docker container: {e}")
 
-    return ServiceHandle(
-        container_id,
-        base_url,
-        td,
-        node,
-        accel_devices,
-    )
+    return ServiceHandle(container_id, base_url, td)
 
 
 def accel_devices_from_node(desc: Desc, node: Node) -> str | None:

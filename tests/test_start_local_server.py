@@ -4,7 +4,6 @@ import ast
 import os
 from pathlib import Path
 
-from single_spec.exec import available_nodes
 from single_spec.IR import Desc, Metadata, Resources
 from single_spec.exec.executors.local_docker import (
     start_fastapi_service,
@@ -81,14 +80,11 @@ def add2_endpoint(payload: Add2Request):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))'''
     os.chdir(Path(__file__).parent)
-    exec_nodes, local_index = available_nodes()
-    node = exec_nodes[local_index]
     service = start_fastapi_service(
         code,
         Desc(
             ast.parse(code).body, Metadata(env="python:3.9-slim", resources=Resources())
         ),
-        node,
     )
     response = requests.post(
         f"{service.base_url}/add2",
@@ -139,15 +135,12 @@ def add2_endpoint(payload: Add2Request):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))'''
     os.chdir(Path(__file__).parent)
-    exec_nodes, local_index = available_nodes()
-    node = exec_nodes[local_index]
     service = start_fastapi_service(
         code,
         Desc(
             ast.parse(code).body,
             Metadata(env=("python:3.9-slim", ["numpy"]), resources=Resources()),
         ),
-        node,
     )
     response = requests.post(
         f"{service.base_url}/add2",
@@ -169,15 +162,12 @@ app2 = FastAPI()
 """
     try:
         os.chdir(Path(__file__).parent)
-        exec_nodes, local_index = available_nodes()
-        node = exec_nodes[local_index]
         service = start_fastapi_service(
             code,
             Desc(
                 ast.parse(code).body,
                 Metadata(env="python:3.9-slim", resources=Resources()),
             ),
-            node,
         )
         service.stop()
         assert False, "Expected failure due to missing 'app' variable"

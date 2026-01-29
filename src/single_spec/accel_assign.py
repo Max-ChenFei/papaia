@@ -1,0 +1,19 @@
+import os
+
+PREFIX = "TOOL_ACCEL_INDEXES__"
+
+
+def assign_accel_devices_code(name: str, indexes: str) -> None:
+    """Assign accelerator indexes as a raw string like '0,1' to env."""
+    if name == "":
+        raise ValueError("Tool name cannot be empty")
+    return f"""import os
+os.environ["{PREFIX}{name}"] = "{indexes}"
+"""
+
+
+def assigned_accel_devices(name: str) -> str | None:
+    """Return assigned accelerator indexes as a raw string like '0,1' from env."""
+    if name == "":
+        raise ValueError("Tool name cannot be empty")
+    return os.environ.get(f"{PREFIX}{name}")
