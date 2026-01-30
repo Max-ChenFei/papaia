@@ -1,7 +1,7 @@
 import ast
 from dataclasses import dataclass
 
-from .env import Env
+from .pip_install import Pip_Install
 from .resources import RESOURCE_FIELDS, Resources
 
 
@@ -10,14 +10,14 @@ class Metadata:
     """Runtime metadata for a function or class.
 
     Attributes:
-        env: Runtime environment (e.g., Docker image).
+        pip_install: Pip install specifications (e.g., requirements.txt path or list of packages).
         resources: Resource requirements (cpus, memory, accel).
         entry: Entry method name for the class.
         setup: Setup method name for the class.
         teardown: Teardown method name for the class.
     """
 
-    env: Env | None = None
+    pip_install: Pip_Install | None = None
     resources: Resources | None = None
 
     entry: str | None = None

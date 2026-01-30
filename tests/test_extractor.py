@@ -8,7 +8,7 @@ from ast_eq import ast_eq
 
 def test_extract_fn_metadata():
     source = """
-@required(env="python:3.10", accel="A100:2", cpus=4, memory=16)
+@required(pip_install="path/requirements.txt", accel="A100:2", cpus=4, memory=16)
 def my_function():
     pass
 
@@ -17,7 +17,7 @@ print("done")
     decorator = ast.parse(source).body[0].decorator_list[0]
     metadata = extract_metadata(decorator, is_class_def=False)
     assert metadata is not None
-    assert metadata.env == "python:3.10"
+    assert metadata.pip_install == "path/requirements.txt"
     assert metadata.resources.accel_type == "A100"
     assert metadata.resources.accel_count == 2
     assert metadata.resources.cpus == 4
@@ -26,7 +26,7 @@ print("done")
 
 def test_split_decorator():
     source = """
-@required(env="python:3.10", accel="A100:2")
+@required(pip_install="path/requirements.txt", accel="A100:2")
 @tool
 @another_decorator(param=42)
 def my_function():
@@ -40,7 +40,7 @@ def my_function():
 
 def test_extract_desc_from_def():
     source = """
-@required(env="python:3.10", accel="A100:2")
+@required(pip_install="path/requirements.txt", accel="A100:2")
 @tool
 @another_decorator(param=42)
 def my_function():
@@ -65,14 +65,14 @@ def another_function():
 def my_function():
     pass""").body[0],
     )
-    assert desc.metadata.env == "python:3.10"
+    assert desc.metadata.pip_install == "path/requirements.txt"
     assert desc.metadata.resources.accel_type == "A100"
     assert desc.metadata.resources.accel_count == 2
 
 
 def test_extract_desc_from_def_cls():
     source = """
-@required_cls(env="python:3.10", accel="A100:2", entry="main_method")
+@required_cls(pip_install="path/requirements.txt", accel="A100:2", entry="main_method")
 @tool
 @another_decorator(param=42)
 class MyClass:
@@ -99,7 +99,7 @@ class MyClass:
     def main_method(self):
         pass""").body[0],
     )
-    assert desc.metadata.env == "python:3.10"
+    assert desc.metadata.pip_install == "path/requirements.txt"
     assert desc.metadata.resources.accel_type == "A100"
     assert desc.metadata.resources.accel_count == 2
 
@@ -111,7 +111,7 @@ from PIL import Image
 from typing import List
 from single_spec import required
 
-@required(env="python:3.10", accel="A100:2")
+@required(pip_install="path/requirements.txt", accel="A100:2")
 def my_function():
     a: List[int] = [1, 2, 3]
     print("Using torch:", torch.__version__)
@@ -128,7 +128,7 @@ def my_function():
     print('Using torch:', torch.__version__)
     print('Using PIL:', Image.__name__)""").body[0],
     )
-    assert desc.metadata.env == "python:3.10"
+    assert desc.metadata.pip_install == "path/requirements.txt"
     assert desc.metadata.resources.accel_type == "A100"
     assert desc.metadata.resources.accel_count == 2
     for imp, original_imp in zip(desc.imports, ast.parse(source).body[:5].__iter__()):

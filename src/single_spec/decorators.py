@@ -1,5 +1,5 @@
 def required(
-    env: str | tuple[str, list[str]] | None = None,
+    pip_install: str | list[str] | None = None,
     cpus: int | None = None,
     memory: int | None = None,
     accel: str | None = None,
@@ -7,7 +7,9 @@ def required(
     """Decorator to annotate runtime metadata for a function.
 
     Args:
-        env: str (container_image) or (str, list[str]) (container_image, pip_packages) e.g., ("python:3.10-slim", ["fastapi", "uvicorn"])
+        pip_install: Pip install specifications. Can be:
+            - str: path to requirements.txt
+            - list[str]: list of pip packages
         cpus: Number of CPUs at least.
         memory: Memory specification in GB at least.
         accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
@@ -27,7 +29,7 @@ def required_cls(
     entry: str,
     cpus: int | None = None,
     memory: int | None = None,
-    env: str | tuple[str, list[str]] | None = None,
+    pip_install: str | list[str] | None = None,
     accel: str | None = None,
     setup: str | None = None,
     teardown: str | None = None,
@@ -38,7 +40,9 @@ def required_cls(
         entry: Entry method name for the class.
         cpus: Number of CPUs at least.
         memory: Memory specification in GB at least.
-        env: str (container_image) or (str, list[str]) (container_image, pip_packages) e.g., ("python:3.10-slim", ["fastapi", "uvicorn"]).
+        pip_install: Pip install specifications. Can be:
+            - str: path to requirements.txt
+            - list[str]: list of pip packages
         accel: Accelerator requirement. Format: "<name>:<count>" or "<name>"
             (defaults to a count of 1). Example: "H100:4".
         setup: Setup method name for the class.

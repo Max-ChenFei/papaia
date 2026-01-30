@@ -5,7 +5,7 @@ from ast_eq import ast_eq
 
 def test_update_ast():
     source = """
-@required(env="python:3.10", accel="A100:2")
+@required(pip_install="path/requirements.txt", accel="A100:2")
 @tool
 @another_decorator(param=42)
 def my_function():

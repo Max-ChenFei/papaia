@@ -1,7 +1,7 @@
 import ast
 from dataclasses import dataclass
 
-from .env import Env
+from .pip_install import Pip_Install
 from .resources import Resources
 from .metadata import Metadata, extract_metadata
 from ..decorators import decorator_keywords
@@ -26,8 +26,8 @@ class Desc:
         return self.metadata.resources
 
     @property
-    def env(self) -> Env | None:
-        return self.metadata.env
+    def pip_install(self) -> Pip_Install | None:
+        return self.metadata.pip_install
 
 
 def extract_desc(mod: ast.Module) -> dict[str, Desc]:

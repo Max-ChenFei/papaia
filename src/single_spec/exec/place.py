@@ -24,7 +24,9 @@ def place_on_exec_sites(
         node = exec_nodes[node_index]
         desc.assigned_node = node
         desc.assigned_accel_devices = node.get_accel_devices(desc.resources.accel_count)
-        executor_instance = get_executor_by_name(node.executor, desc.env is not None)
+        executor_instance = get_executor_by_name(
+            node.executor, desc.pip_install is not None
+        )
 
         stub_ast[name] = executor_instance.run(desc)
         executor[name] = executor_instance
