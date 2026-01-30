@@ -53,7 +53,7 @@ def {fn_name}_endpoint(payload: {req_model}):
 
     new_body = ast.parse(f"""
 import requests
-url = f"$base_url/{route}"
+url = f"$base_url{route}"
 payload = {{{payload_items}}}
 response = requests.post(url, json=payload)
 response.raise_for_status()

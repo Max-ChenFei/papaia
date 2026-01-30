@@ -73,7 +73,7 @@ def add2_endpoint(payload: Add2Request):
         The sum of ``a`` and ``b``.
     """
     import requests
-    url = f'$base_url//add2'
+    url = f'$base_url/add2'
     payload = {'a': a, 'b': b}
     response = requests.post(url, json=payload)
     response.raise_for_status()
@@ -174,7 +174,7 @@ class Adder(BaseTool):
             The sum of ``a`` and ``b``.
         """
         import requests
-        url = f'$base_url//adder'
+        url = f'$base_url/adder'
         payload = {'a': a, 'b': b}
         response = requests.post(url, json=payload)
         response.raise_for_status()

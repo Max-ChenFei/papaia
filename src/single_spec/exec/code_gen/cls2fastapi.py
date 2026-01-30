@@ -45,7 +45,7 @@ def shutdown_event():
     instance.{teardown}()"""
     )
     pip_install = ["fastapi", "pydantic"]
-    code = f'''from fastapi import FastAPI, HTTPException
+    code = f"""from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 {imports_any}
 app = FastAPI()
@@ -66,14 +66,14 @@ class {resp_model}(BaseModel):
     result: {ret}
 
 # --- auto-generated endpoint ---
-@app.post("{route}", response_model={resp_model})
+@app.post(f"{route}", response_model={resp_model})
 def {cls_name.lower()}_endpoint(payload: {req_model}):
     try:
         result = instance.{entry}({", ".join(call_args)})
         return {resp_model}(result=result)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-'''
+"""
 
     # Build payload dict for the invoke template
     payload_items = ", ".join(
@@ -85,7 +85,7 @@ def {cls_name.lower()}_endpoint(payload: {req_model}):
 
     new_body = ast.parse(f"""
 import requests
-url = f"$base_url/{route}"
+url = f"$base_url{route}"
 payload = {{{payload_items}}}
 response = requests.post(url, json=payload)
 response.raise_for_status()
