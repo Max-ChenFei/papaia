@@ -1,12 +1,12 @@
 import requests
 import ast
 
-from single_spec.exec.executors.venv import Venv
+from single_spec.exec.executors.venv import VenvExecutor
 from string import Template
 from single_spec.IR import Desc, Metadata
 
 
-def test_venv_executor_creation():
+def test_venv_executor():
     code = '''def add2(a: int, b: int = 1) -> int:
     """Adds two numbers.
 
@@ -50,7 +50,7 @@ def add2_endpoint(payload: Add2Request):
         ast_node=ast.parse(code).body[0],
         metadata=Metadata(pip_install=(["fastapi", "uvicorn", "pydantic"])),
     )
-    venv_executor = Venv()
+    venv_executor = VenvExecutor()
     invoke = venv_executor._deploy(
         desc=desc, generate_code=server_code, invoke_template=template
     )
@@ -78,3 +78,40 @@ def add2_endpoint(payload: Add2Request):
     except requests.exceptions.ConnectionError:
         # Expected - server is stopped
         pass
+
+
+def test_venv_write_requirements_file(tmp_path):
+    venv_executor = VenvExecutor()
+    reqs = ["fastapi==0.70.0", "uvicorn>=0.15.0", "pydantic"]
+    req_file = venv_executor._write_pip_requirements_file(tmp_path, reqs)
+
+    with open(req_file, "r") as f:
+        content = f.read().strip().split("\n")
+
+    assert content == reqs
+
+
+def test_venv_write_requirements_file_from_path(tmp_path):
+    venv_executor = VenvExecutor()
+    src_req_file = tmp_path / "source_requirements.txt"
+    reqs = ["fastapi==0.70.0", "uvicorn>=0.15.0", "pydantic"]
+    with open(src_req_file, "w") as f:
+        f.write("\n".join(reqs))
+
+    req_file = venv_executor._write_pip_requirements_file(tmp_path, str(src_req_file))
+
+    with open(req_file, "r") as f:
+        content = f.read().strip().split("\n")
+
+    assert content == reqs
+
+
+def test_venv_write_requirements_file_FileNotFoundError(tmp_path):
+    venv_executor = VenvExecutor()
+    try:
+        venv_executor._write_pip_requirements_file(
+            tmp_path, "non_existent_requirements.txt"
+        )
+        assert False, "Expected FileNotFoundError"
+    except FileNotFoundError:
+        pass  # Expected exception

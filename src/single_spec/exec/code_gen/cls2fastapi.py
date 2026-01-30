@@ -10,7 +10,7 @@ def cls2fastapi(
     entry: str,
     setup: str | None = None,
     teardown: str | None = None,
-) -> str:
+) -> tuple[list[str], str, Template]:
     """Generate a FastAPI app template for the given class ast node and return the code template to invoke it."""
     cls_no_decorators = deepcopy(cls)
     cls_no_decorators.decorator_list = []  # remove decorators
@@ -44,7 +44,7 @@ def startup_event():
 def shutdown_event():
     instance.{teardown}()"""
     )
-
+    pip_install = ["fastapi", "pydantic"]
     code = f'''from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 {imports_any}
@@ -100,4 +100,4 @@ return response.json()["result"]""").body
             break
 
     invoke_template = Template(ast.unparse(invoke_cls))
-    return (code, invoke_template)
+    return (pip_install, code, invoke_template)

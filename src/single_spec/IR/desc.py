@@ -1,7 +1,7 @@
 import ast
 from dataclasses import dataclass
 
-from .pip_install import Pip_Install
+from .pip_install import PipInstall, merge_pip_install
 from .resources import Resources
 from .metadata import Metadata, extract_metadata
 from ..decorators import decorator_keywords
@@ -26,8 +26,11 @@ class Desc:
         return self.metadata.resources
 
     @property
-    def pip_install(self) -> Pip_Install | None:
+    def pip_install(self) -> PipInstall | list[PipInstall] | None:
         return self.metadata.pip_install
+
+    def append_pip_install(self, value: list[str] | None) -> None:
+        self.metadata.pip_install = merge_pip_install(self.metadata.pip_install, value)
 
 
 def extract_desc(mod: ast.Module) -> dict[str, Desc]:

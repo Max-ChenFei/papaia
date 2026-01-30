@@ -1,11 +1,11 @@
 import ast
 from dataclasses import dataclass
 
-from .pip_install import Pip_Install
+from .pip_install import PipInstall
 from .resources import RESOURCE_FIELDS, Resources
 
 
-@dataclass(frozen=True)
+@dataclass
 class Metadata:
     """Runtime metadata for a function or class.
 
@@ -17,7 +17,7 @@ class Metadata:
         teardown: Teardown method name for the class.
     """
 
-    pip_install: Pip_Install | None = None
+    pip_install: PipInstall | tuple[PipInstall, ...] | None = None
     resources: Resources | None = None
 
     entry: str | None = None

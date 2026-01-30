@@ -13,7 +13,8 @@ class Executor(ABC):
     def run(self, desc: Desc) -> ast.AST:
         self._desc[desc.ast_node.name] = desc
 
-        code, invoke_template = self._generate_code(desc)
+        pip_install, code, invoke_template = self._generate_code(desc)
+        desc.append_pip_install(pip_install)
         if code is not None:
             if desc.imports:
                 code = merge(ast.parse(code), desc.imports)
@@ -31,7 +32,7 @@ class Executor(ABC):
             del self._desc[name]
 
     @abstractmethod
-    def _generate_code(self, desc: Desc) -> tuple[str, str]:
+    def _generate_code(self, desc: Desc) -> tuple[list[str] | None, str | None, str]:
         """Generate runnable code string."""
         raise NotImplementedError
 

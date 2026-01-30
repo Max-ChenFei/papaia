@@ -5,7 +5,7 @@ from string import Template
 from .util import extract_fields_and_call_args, get_docstring_stmt
 
 
-def func2fastapi(fn: ast.FunctionDef) -> tuple[str, str]:
+def func2fastapi(fn: ast.FunctionDef) -> tuple[list[str], str, str]:
     """Generate a FastAPI app template for the given function ast node and return the code template to invoke it."""
     # Use a copy of the function without decorators when generating the FastAPI code
     fn_no_decorators = deepcopy(fn)
@@ -19,6 +19,7 @@ def func2fastapi(fn: ast.FunctionDef) -> tuple[str, str]:
     req_model = f"{fn_name.title().replace('_', '')}Request"
     resp_model = f"{fn_name.title().replace('_', '')}Response"
 
+    pip_install = ["fastapi", "pydantic"]
     code = f'''from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 {imports_any}
@@ -60,4 +61,4 @@ return response.json()["result"]""").body
     invoke.body = ([doc_stmt] if doc_stmt is not None else []) + new_body
     ast.fix_missing_locations(invoke)
     invoke_template = Template(ast.unparse(invoke))
-    return (code, invoke_template)
+    return (pip_install, code, invoke_template)

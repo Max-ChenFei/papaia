@@ -8,21 +8,17 @@ from pathlib import Path
 from venv import create
 from multiprocessing import Process
 
-from ...IR import Desc
+from ...IR import Desc, PipInstall
 from .another_process import AnotherProcess
 from ...cache import CACHE_PATH
 
 
-# todo: imports add in code generation? or imports is requirements.text? use it direct append imports
-# todo: env update/
-
-
-class Venv(AnotherProcess):
+class VenvExecutor(AnotherProcess):
     """
     execution in a local Python virtual environment.
     """
 
-    # cache for each desc including (code, requirements, venv)
+    # cache for each desc including (code, pip requirements, venv)
     _cache: dict[str, Path] = {}
     _processes: dict[str, Process] = {}
 
@@ -37,10 +33,14 @@ class Venv(AnotherProcess):
     def _deploy(self, desc: Desc, generate_code: str, invoke_template: Template) -> str:
         desc_dir = self._desc_dir(desc)
         self._venv_path = self._create_venv(desc_dir)
-        req_file = self._write_requirements_file(desc_dir, desc.pip_install)
-        self._pip_install(self._venv_path, req_file)
+
         port = pick_free_port()
-        main_file = self._write_code_file(desc_dir, generate_code, port)
+        main_file, pip_packages = self._write_code_file(desc_dir, generate_code, port)
+        desc.append_pip_install(pip_packages)
+
+        req_file = self._write_pip_requirements_file(desc_dir, desc.pip_install)
+        self._pip_install(self._venv_path, req_file)
+
         self._py_run_background(desc.ast_node.name, self._venv_path, main_file)
 
         # Wait for server to start
@@ -58,7 +58,7 @@ class Venv(AnotherProcess):
             self._cache[desc.ast_node.name] = desc_dir
         return desc_dir
 
-    def _write_code_file(self, dir, code: str, port: int) -> Path:
+    def _write_code_file(self, dir, code: str, port: int) -> tuple[Path, list[str]]:
         code_with_server = f"""{code}
 
 if __name__ == "__main__":
@@ -68,30 +68,39 @@ if __name__ == "__main__":
         main_file = dir / "main.py"
         with open(main_file, "w", encoding="utf-8") as f:
             f.write(code_with_server)
-        return main_file
+        pip_packages = ["uvicorn"]
+        return main_file, pip_packages
 
-    def _write_requirements_file(
-        self, dir, requirements: list[str] | str | None
+    def _write_pip_requirements_file(
+        self, dir, pip_install: PipInstall | tuple[PipInstall, ...] | None
     ) -> Path:
         req_file = dir / "requirements.txt"
-        if isinstance(requirements, list):
+        if pip_install is None:
             with open(req_file, "w", encoding="utf-8") as f:
-                f.write("\n".join(requirements))
-        elif isinstance(requirements, str):
-            # If it's a string, assume it's a path to a requirements.txt file
-            src_path = Path(requirements)
-            if src_path.exists():
-                with (
-                    open(src_path, "r", encoding="utf-8") as src,
-                    open(req_file, "w", encoding="utf-8") as dst,
-                ):
-                    dst.write(src.read())
-            else:
-                raise FileNotFoundError(f"Requirements file not found: {requirements}")
-        else:
-            raise ValueError(
-                "No requirements specified. Either list of packages or path of requirements.txt must be provided."
-            )
+                f.write("")
+            return req_file
+
+        if not isinstance(pip_install, tuple):
+            installs = (pip_install,)
+
+        for install in installs:
+            # a list of packages
+            if isinstance(install, list):
+                with open(req_file, "w", encoding="utf-8") as f:
+                    f.write("\n".join(install))
+            # path to a requirements.txt file
+            elif isinstance(install, str):
+                src_path = Path(install)
+                if src_path.exists():
+                    with (
+                        open(src_path, "r", encoding="utf-8") as src,
+                        open(req_file, "w", encoding="utf-8") as dst,
+                    ):
+                        dst.write(src.read())
+                else:
+                    raise FileNotFoundError(
+                        f"Requirements file not found: {install} in current working dir {Path.cwd()}"
+                    )
         return req_file
 
     def _create_venv(self, dir: Path) -> Path:

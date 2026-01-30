@@ -19,7 +19,7 @@ def add2(a: int, b: int = 1) -> int:
     return a + b
     '''
 
-    code, invoke_template = func2fastapi(ast.parse(src).body[0])
+    _, code, invoke_template = func2fastapi(ast.parse(src).body[0])
 
     assert ast_eq(
         ast.parse(code),
@@ -102,7 +102,7 @@ def test_cls2fastapi():
     def teardown(self):
         print("teardown called")
     '''
-    code, invoke_template = cls2fastapi(
+    _, code, invoke_template = cls2fastapi(
         ast.parse(src).body[0], entry="add2", setup="setup", teardown="teardown"
     )
     assert ast_eq(

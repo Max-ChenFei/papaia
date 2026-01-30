@@ -11,7 +11,7 @@ class AnotherProcess(Executor):
     execution in another execution environments (e.g., Docker, remote servers), not same as the CurrentProcess.
     """
 
-    def _generate_code(self, desc: Desc) -> tuple[str, str]:
+    def _generate_code(self, desc: Desc) -> tuple[list[str] | None, str | None, str]:
         if isinstance(desc.ast_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             return func2fastapi(desc.ast_node)
         elif isinstance(desc.ast_node, ast.ClassDef):

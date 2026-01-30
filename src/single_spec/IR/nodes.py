@@ -31,7 +31,8 @@ class Node:
 
     def get_accel_devices(self, count) -> str | None:
         if (
-            self.accel_type is None
+            count == 0
+            or self.accel_type is None
             or self.accel_count is None
             or self.accel_count == 0
             or count > self.accel_count
@@ -52,6 +53,8 @@ class Node:
         return ",".join(devices)
 
     def release_accel_devices(self, devices: str) -> None:
+        if devices is None:
+            return
         for dev in devices.split(","):
             idx = int(dev)
             self.accel_assigned[idx] = False
