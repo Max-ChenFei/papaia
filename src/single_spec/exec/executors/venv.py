@@ -87,13 +87,11 @@ if __name__ == "__main__":
                 ):
                     dst.write(src.read())
             else:
-                # If the path doesn't exist, write it as a single line (could be a package name)
-                with open(req_file, "w", encoding="utf-8") as f:
-                    f.write(requirements)
+                raise FileNotFoundError(f"Requirements file not found: {requirements}")
         else:
-            # If None or unrecognized type, write an empty requirements file
-            with open(req_file, "w", encoding="utf-8") as f:
-                f.write("")
+            raise ValueError(
+                "No requirements specified. Either list of packages or path of requirements.txt must be provided."
+            )
         return req_file
 
     def _create_venv(self, dir: Path) -> Path:
