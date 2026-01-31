@@ -11,15 +11,13 @@ from single_spec import required_cls
 
 
 @required_cls(
-    env=(
-        "python:3.10-slim",
-        [
-            "torch --extra-index-url https://download.pytorch.org/whl/cu124",
-            "transformers",
-            "Pillow",
-            "requests",
-        ],
-    ),
+    pip_install=[
+        "torch --index-url https://download.pytorch.org/whl/cu124",
+        "transformers",
+        "Pillow",
+        "requests",
+    ],
+    accel="RTX 8000",
     entry="_run",
 )
 class Grounding(BaseTool):
@@ -43,7 +41,19 @@ class Grounding(BaseTool):
 
     def _get_detector(self):
         if self._detector is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            # device = assigned_accel_devices("Grounding")
+            device = "0"  # For testing purpose, replace with assigned_accel_devices
+
+            # Convert to proper cuda device string
+            if device is not None:
+                device = f"cuda:{device}"
+            elif torch.cuda.is_available():
+                device = "cuda"
+            else:
+                device = "cpu"
+
+            print(f"Using device: {device}")
+
             self._detector = pipeline(
                 model="IDEA-Research/grounding-dino-tiny",
                 task="zero-shot-object-detection",

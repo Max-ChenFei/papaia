@@ -87,7 +87,9 @@ def {cls_name.lower()}_endpoint(payload: {req_model}):
 import requests
 url = f"$base_url{route}"
 payload = {{{payload_items}}}
+print(f"[DEBUG] Sending to {{url}}: {{payload}}")
 response = requests.post(url, json=payload)
+print(f"[DEBUG] Status: {{response.status_code}}, Response: {{response.text}}")
 response.raise_for_status()
 return response.json()["result"]""").body
     invoke.body = ([doc_stmt] if doc_stmt is not None else []) + new_body

@@ -23,27 +23,28 @@ class VenvExecutor(AnotherProcess):
     _processes: dict[str, Process] = {}
 
     def stop(self, name: str) -> None:
-        """Stop the running FastAPI server."""
+        """Stop the running server."""
         super().stop(name)
+        print(f"Stopping VenvExecutor for {name}")
         if name in self._processes:
-            self._processes[name].terminate()
-            self._processes[name].wait()
+            process = self._processes[name]
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
             del self._processes[name]
 
     def _deploy(self, desc: Desc, generate_code: str, invoke_template: Template) -> str:
         desc_dir = self._desc_dir(desc)
-        self._venv_path = self._create_venv(desc_dir)
+        venv = self._create_venv(desc_dir)
 
         port = pick_free_port()
-        main_file, pip_packages = self._write_code_file(desc_dir, generate_code, port)
-        desc.append_pip_install(pip_packages)
+        main_file = self._write_code_file(desc, generate_code, desc_dir, port)
+        self._pip_install(venv, desc, desc_dir)
+        self._py_run_background(venv, desc.ast_node.name, main_file)
 
-        req_file = self._write_pip_requirements_file(desc_dir, desc.pip_install)
-        self._pip_install(self._venv_path, req_file)
-
-        self._py_run_background(desc.ast_node.name, self._venv_path, main_file)
-
-        # Wait for server to start
         base_url = f"http://localhost:{port}"
         self._wait_for_server(base_url)
 
@@ -58,7 +59,7 @@ class VenvExecutor(AnotherProcess):
             self._cache[desc.ast_node.name] = desc_dir
         return desc_dir
 
-    def _write_code_file(self, dir, code: str, port: int) -> tuple[Path, list[str]]:
+    def _write_code_file(self, desc: Desc, code: str, dir: Path, port: int) -> Path:
         code_with_server = f"""{code}
 
 if __name__ == "__main__":
@@ -68,70 +69,119 @@ if __name__ == "__main__":
         main_file = dir / "main.py"
         with open(main_file, "w", encoding="utf-8") as f:
             f.write(code_with_server)
-        pip_packages = ["uvicorn"]
-        return main_file, pip_packages
+        desc.append_pip_install(["uvicorn"])
+        return main_file
 
-    def _write_pip_requirements_file(
+    def _split_pip_install(
         self, dir, pip_install: PipInstall | tuple[PipInstall, ...] | None
-    ) -> Path:
+    ) -> tuple[Path, list[tuple[str, str]]]:
+        """Write requirements and return (file, special_installs).
+
+        special_installs: list of (package_spec, index_url) for packages that need specific indexes
+        """
         req_file = dir / "requirements.txt"
+        special_installs = []
+
         if pip_install is None:
             with open(req_file, "w", encoding="utf-8") as f:
                 f.write("")
-            return req_file
+            return req_file, special_installs
 
         if not isinstance(pip_install, tuple):
             installs = (pip_install,)
+        else:
+            installs = pip_install
+
+        regular_packages = []
 
         for install in installs:
             # a list of packages
             if isinstance(install, list):
-                with open(req_file, "w", encoding="utf-8") as f:
-                    f.write("\n".join(install))
+                for pkg in install:
+                    # Check if package has index URL flags
+                    if "--index-url" in pkg or "--extra-index-url" in pkg:
+                        parts = pkg.split()
+                        pkg_name = parts[0]
+                        # Find the URL after --index-url or --extra-index-url
+                        for i, part in enumerate(parts):
+                            if part in [
+                                "--index-url",
+                                "--extra-index-url",
+                            ] and i + 1 < len(parts):
+                                index_url = parts[i + 1]
+                                special_installs.append((pkg_name, index_url))
+                                break
+                    else:
+                        regular_packages.append(pkg)
             # path to a requirements.txt file
             elif isinstance(install, str):
                 src_path = Path(install)
                 if src_path.exists():
-                    with (
-                        open(src_path, "r", encoding="utf-8") as src,
-                        open(req_file, "w", encoding="utf-8") as dst,
-                    ):
-                        dst.write(src.read())
+                    with open(src_path, "r", encoding="utf-8") as src:
+                        regular_packages.extend(src.read().splitlines())
                 else:
                     raise FileNotFoundError(
                         f"Requirements file not found: {install} in current working dir {Path.cwd()}"
                     )
-        return req_file
 
-    def _create_venv(self, dir: Path) -> Path:
+        with open(req_file, "w", encoding="utf-8") as f:
+            f.write("\n".join(regular_packages))
+
+        return req_file, special_installs
+
+    def _create_venv(self, dir: Path):
         venv_path = dir / ".venv"
         create(str(venv_path), with_pip=True)
-        return venv_path
+        return venv_path.resolve()
 
-    def _pip_install(self, venv_path: Path, requirement_file: Path) -> None:
-        py = venv_path.resolve()
-        pip = (
-            py / "Scripts" / "pip"
-            if sys.platform == "win32"
-            else venv_path / "bin" / "pip"
-        )
+    def _pip_install(self, venv: Path, desc: Desc, desc_dir: Path) -> None:
+        req_file, special_installs = self._split_pip_install(desc_dir, desc.pip_install)
+        self._pip_install_from_index(venv, special_installs)
+        self._pip_install_from_requirements(venv, req_file)
+
+    def _pip_install_from_index(
+        self, py: Path, special_installs: list[tuple[str, str]]
+    ) -> None:
+        """Install a specific package from a specific index."""
+        pip = py / "Scripts" / "pip" if sys.platform == "win32" else py / "bin" / "pip"
+        for pkg, index_url in special_installs:
+            try:
+                print(f"Installing {pkg} from {index_url}")
+                subprocess.run(
+                    [str(pip), "install", pkg, "--index-url", index_url],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except subprocess.CalledProcessError as e:
+                print(f"Error installing {pkg}: {e}")
+
+    def _pip_install_from_requirements(self, py: Path, req_file: Path) -> None:
+        """Install packages from a requirements.txt file."""
+        pip = py / "Scripts" / "pip" if sys.platform == "win32" else py / "bin" / "pip"
         try:
             subprocess.run(
-                [str(pip), "install", "-r", str(requirement_file)], check=True
+                [str(pip), "install", "-r", str(req_file)],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
         except subprocess.CalledProcessError as e:
-            print(f"Error installing requirements: {e}")
+            print(f"Error installing packages from {req_file}: {e}")
 
-    def _py_run_background(self, name, venv_path: Path, main_file: Path) -> None:
-        py = venv_path.resolve()
+    def _py_run_background(self, py: Path, name, main_file: Path) -> None:
         python = (
             py / "Scripts" / "python"
             if sys.platform == "win32"
-            else venv_path / "bin" / "python"
+            else py / "bin" / "python"
         )
         try:
             # Run in background process
-            process = subprocess.Popen([str(python), str(main_file)])
+            process = subprocess.Popen(
+                [str(python), str(main_file)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         except subprocess.CalledProcessError as e:
             print(f"Error running background process: {e}")
 

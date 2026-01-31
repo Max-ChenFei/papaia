@@ -83,7 +83,7 @@ def add2_endpoint(payload: Add2Request):
 def test_venv_write_requirements_file(tmp_path):
     venv_executor = VenvExecutor()
     reqs = ["fastapi==0.70.0", "uvicorn>=0.15.0", "pydantic"]
-    req_file = venv_executor._write_pip_requirements_file(tmp_path, reqs)
+    req_file = venv_executor._split_pip_install(tmp_path, reqs)
 
     with open(req_file, "r") as f:
         content = f.read().strip().split("\n")
@@ -98,7 +98,7 @@ def test_venv_write_requirements_file_from_path(tmp_path):
     with open(src_req_file, "w") as f:
         f.write("\n".join(reqs))
 
-    req_file = venv_executor._write_pip_requirements_file(tmp_path, str(src_req_file))
+    req_file = venv_executor._split_pip_install(tmp_path, str(src_req_file))
 
     with open(req_file, "r") as f:
         content = f.read().strip().split("\n")
@@ -109,9 +109,7 @@ def test_venv_write_requirements_file_from_path(tmp_path):
 def test_venv_write_requirements_file_FileNotFoundError(tmp_path):
     venv_executor = VenvExecutor()
     try:
-        venv_executor._write_pip_requirements_file(
-            tmp_path, "non_existent_requirements.txt"
-        )
+        venv_executor._split_pip_install(tmp_path, "non_existent_requirements.txt")
         assert False, "Expected FileNotFoundError"
     except FileNotFoundError:
         pass  # Expected exception
