@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 
-CACHE_PATH: Path = Path(".sing_spec_cache").resolve()
+CACHE_PATH: Path = Path(".single_spec_cache").resolve()
 if not CACHE_PATH.exists():
     CACHE_PATH.mkdir(parents=True, exist_ok=True)
 
