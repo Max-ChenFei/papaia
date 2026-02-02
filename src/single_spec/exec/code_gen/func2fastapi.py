@@ -55,10 +55,10 @@ def {fn_name}_endpoint(payload: {req_model}):
 import requests
 url = f"$base_url{route}"
 payload = {{{payload_items}}}
-print(f"[DEBUG] Sending to {{url}}: {{payload}}")
 response = requests.post(url, json=payload)
-print(f"[DEBUG] Status: {{response.status_code}}, Response: {{response.text}}")
-response.raise_for_status()
+if response.status_code != 200:
+    error_detail = response.json().get("detail", response.text) if response.headers.get("content-type") == "application/json" else response.text
+    raise Exception(f"Server error ({{response.status_code}}): {{error_detail}}")
 return response.json()["result"]""").body
     invoke.body = ([doc_stmt] if doc_stmt is not None else []) + new_body
     ast.fix_missing_locations(invoke)
