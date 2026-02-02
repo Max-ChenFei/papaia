@@ -66,7 +66,7 @@ class {resp_model}(BaseModel):
     result: {ret}
 
 # --- auto-generated endpoint ---
-@app.post(f"{route}", response_model={resp_model})
+@app.post("{route}", response_model={resp_model})
 def {cls_name.lower()}_endpoint(payload: {req_model}):
     try:
         result = instance.{entry}({", ".join(call_args)})
