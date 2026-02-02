@@ -11,6 +11,10 @@ class Node:
         memory: int | None = None,
         accel_type: str | None = None,
         accel_count: int | None = None,
+        host: str | None = None,
+        port: int | None = None,
+        username: str | None = None,
+        password: str | None = None,
     ):
         self.name = name
         self.executor = executor
@@ -18,6 +22,10 @@ class Node:
         self.memory = memory
         self.accel_type = accel_type
         self.accel_count = accel_count  # id from 0 to N-1
+        self.host = host
+        self.port = port or 22
+        self.username = username
+        self.password = password
 
         self.accel_assignment: dict[str, list] = {}  # e.g., {"task1": [0,1]}
         self.accel_assigned = [False] * (accel_count or 0)
@@ -74,10 +82,10 @@ def available_nodes() -> tuple[list[Node], int | None]:
     nodes_tbl = data.get("nodes")
     if not isinstance(nodes_tbl, dict):
         raise ValueError(
-            "exec_sites.toml must contain a [nodes] table with sub-tables like [nodes.local]."
+            "exec_nodes.toml must contain a [nodes] table with sub-tables like [nodes.local]."
         )
     if len(nodes_tbl.items()) == 0:
-        raise ValueError("exec_sites.toml must contain at least one node in [nodes].")
+        raise ValueError("exec_nodes.toml must contain at least one node in [nodes].")
     nodes = []
     local_index = None
     for name, cfg in nodes_tbl.items():
@@ -94,6 +102,10 @@ def available_nodes() -> tuple[list[Node], int | None]:
                 executor=cfg.get("executor"),
                 cpus=cfg.get("cpus"),
                 memory=cfg.get("memory"),
+                host=cfg.get("host"),
+                port=cfg.get("port"),
+                username=cfg.get("username"),
+                password=cfg.get("password"),
                 accel_type=accel_type,
                 accel_count=accel_count,
             )

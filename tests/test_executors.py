@@ -2,6 +2,7 @@ import requests
 import ast
 
 from single_spec.exec.executors.venv import VenvExecutor
+from single_spec.exec.executors.another_process import split_pip_install
 from string import Template
 from single_spec.IR import Desc, Metadata
 
@@ -52,7 +53,7 @@ def add2_endpoint(payload: Add2Request):
     )
     venv_executor = VenvExecutor()
     invoke = venv_executor._deploy(
-        desc=desc, generate_code=server_code, invoke_template=template
+        node=None, desc=desc, generate_code=server_code, invoke_template=template
     )
 
     assert "base_url=http://localhost:" in invoke
@@ -80,10 +81,9 @@ def add2_endpoint(payload: Add2Request):
         pass
 
 
-def test_venv_write_requirements_file(tmp_path):
-    venv_executor = VenvExecutor()
+def test_write_requirements_file(tmp_path):
     reqs = ["fastapi==0.70.0", "uvicorn>=0.15.0", "pydantic"]
-    req_file = venv_executor._split_pip_install(tmp_path, reqs)
+    req_file, _ = split_pip_install(tmp_path, reqs)
 
     with open(req_file, "r") as f:
         content = f.read().strip().split("\n")
@@ -91,14 +91,13 @@ def test_venv_write_requirements_file(tmp_path):
     assert content == reqs
 
 
-def test_venv_write_requirements_file_from_path(tmp_path):
-    venv_executor = VenvExecutor()
-    src_req_file = tmp_path / "source_requirements.txt"
+def test_write_requirements_file_from_path(tmp_path):
+    src_req_file = tmp_path / "requirements.txt"
     reqs = ["fastapi==0.70.0", "uvicorn>=0.15.0", "pydantic"]
     with open(src_req_file, "w") as f:
         f.write("\n".join(reqs))
 
-    req_file = venv_executor._split_pip_install(tmp_path, str(src_req_file))
+    req_file, _ = split_pip_install(tmp_path, str(src_req_file))
 
     with open(req_file, "r") as f:
         content = f.read().strip().split("\n")
@@ -106,10 +105,9 @@ def test_venv_write_requirements_file_from_path(tmp_path):
     assert content == reqs
 
 
-def test_venv_write_requirements_file_FileNotFoundError(tmp_path):
-    venv_executor = VenvExecutor()
+def test_write_requirements_file_FileNotFoundError(tmp_path):
     try:
-        venv_executor._split_pip_install(tmp_path, "non_existent_requirements.txt")
+        split_pip_install(tmp_path, "non_existent_requirements.txt")
         assert False, "Expected FileNotFoundError"
     except FileNotFoundError:
         pass  # Expected exception

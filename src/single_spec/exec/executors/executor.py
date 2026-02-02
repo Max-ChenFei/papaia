@@ -2,7 +2,7 @@ import ast
 from string import Template
 from abc import ABC, abstractmethod
 
-from ...IR import Desc
+from ...IR import Desc, Node
 from ...utils import merge
 from ...accel_assign import assign_accel_devices_code
 
@@ -10,7 +10,7 @@ from ...accel_assign import assign_accel_devices_code
 class Executor(ABC):
     _desc: dict[str, Desc] = {}
 
-    def run(self, desc: Desc) -> ast.AST:
+    def run(self, node: Node, desc: Desc) -> ast.AST:
         self._desc[desc.ast_node.name] = desc
 
         pip_install, code, invoke_template = self._generate_code(desc)
@@ -19,7 +19,7 @@ class Executor(ABC):
             if desc.imports:
                 code = merge(ast.parse(code), desc.imports)
             code = f"{assign_accel_devices_code(desc.ast_node.name, desc.assigned_accel_devices)}\n{code}"
-        return ast.parse(self._deploy(desc, code, invoke_template))
+        return ast.parse(self._deploy(node, desc, code, invoke_template))
 
     def stop(self, name: str) -> None:
         """Stop any running processes or clean up resources if needed."""
@@ -38,7 +38,11 @@ class Executor(ABC):
 
     @abstractmethod
     def _deploy(
-        self, desc: Desc, generate_code: str | None, invoke_template: Template
+        self,
+        node: Node,
+        desc: Desc,
+        generate_code: str | None,
+        invoke_template: Template,
     ) -> str:
         """Deploy artifact and return an access stub, make sure to keep the same signature."""
         raise NotImplementedError

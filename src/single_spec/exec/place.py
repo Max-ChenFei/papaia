@@ -27,8 +27,7 @@ def place_on_exec_sites(
         executor_instance = get_executor_by_name(
             node.executor, desc.pip_install is not None
         )
-
-        stub_ast[name] = executor_instance.run(desc)
+        stub_ast[name] = executor_instance.run(node, desc)
         executor[name] = executor_instance
     return stub_ast, executor
 

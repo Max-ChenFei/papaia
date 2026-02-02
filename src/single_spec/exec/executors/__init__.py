@@ -1,11 +1,13 @@
 from .executor import Executor
 from .current_process import CurrentProcess
 from .another_process import AnotherProcess
+from .remote_venv import RemoteVenv
 from .venv import VenvExecutor
 
 available_executors = {
     "local_same_process": CurrentProcess(),
     "local_venv": VenvExecutor(),
+    "remote": RemoteVenv(),
 }
 
 
