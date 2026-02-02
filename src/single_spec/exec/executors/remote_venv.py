@@ -6,7 +6,7 @@ import asyncssh
 
 from .another_process import AnotherProcess, split_pip_install
 from ...IR import Desc, Node
-from ...cache import add_remote_cache
+from ...cache import add_remote_cache, REMOTE_CACHE_DIR
 
 
 class RemoteVenv(AnotherProcess):
@@ -80,7 +80,7 @@ class RemoteVenv(AnotherProcess):
                     desc_dir, desc.pip_install
                 )
 
-                remote_dir = f"/tmp/single_spec/{desc.ast_node.name}"
+                remote_dir = f"{REMOTE_CACHE_DIR}/{desc.ast_node.name}"
 
                 _print_flush(f"Creating remote directory {remote_dir}...")
                 await conn.run(f"mkdir -p {remote_dir}", check=True)
@@ -150,7 +150,7 @@ class RemoteVenv(AnotherProcess):
                     print(f"  stderr: {r4.stderr}")
                     sys.stdout.flush()
                     raise Exception("Failed to start server process")
-                print(f"  Server process started for {desc.ast_node.name}")
+
                 sys.stdout.flush()
 
                 base_url = f"http://{node.host}:{port}"
