@@ -68,15 +68,9 @@ class Node:
             self.accel_assigned[idx] = False
 
 
-EXEC_NODE_CONFIG_FILENAME = "exec_nodes.toml"
-
-
-def available_nodes() -> tuple[list[Node], int | None]:
-    path = Path(EXEC_NODE_CONFIG_FILENAME)
-    if not path.exists():
-        raise FileNotFoundError(
-            f"No exec_nodes.toml found in current working directory ({path.resolve()})."
-        )
+def available_nodes(
+    path: str | None = None,
+) -> tuple[list[Node], int | None]:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
 
     nodes_tbl = data.get("nodes")

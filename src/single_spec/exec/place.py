@@ -8,10 +8,10 @@ from ..IR import Desc, available_nodes, Node
 
 
 def place_on_exec_sites(
-    descs: dict[str, Desc],
+    descs: dict[str, Desc], nodes_path: str | None = None
 ) -> tuple[dict[str, ast.AST], dict[str, Executor]]:
     """Place on available execution nodes and return access stub and used executors."""
-    exec_nodes, local_index = available_nodes()
+    exec_nodes, local_index = available_nodes(nodes_path)
     plan = assignment(list(descs.values()), exec_nodes, local_index=local_index)
 
     stub_ast = {}
