@@ -1,4 +1,5 @@
 import ast
+import asyncio
 from typing import Dict, Tuple
 
 from ortools.sat.python import cp_model
@@ -17,7 +18,7 @@ def print_assignment(
         print(f"Tool '{task.ast_node.name}' assigned to Node '{node.name}' ")
 
 
-def place_on_exec_sites(
+async def place_on_exec_sites(
     descs: dict[str, Desc], nodes_path: str | None = None
 ) -> tuple[dict[str, ast.AST], dict[str, Executor]]:
     """Place on available execution nodes and return access stub and used executors."""
@@ -30,6 +31,9 @@ def place_on_exec_sites(
     executors = {}
     names = list(descs.keys())
     values = list(descs.values())
+
+    # Prepare tasks for parallel execution
+    tasks = []
     for i, node_index in plan.items():
         name = names[i]
         desc = values[i]
@@ -39,8 +43,17 @@ def place_on_exec_sites(
         executor_instance = get_executor_by_name(
             node.executor, desc.pip_install is not None
         )
-        stub_ast[name] = executor_instance.run(node, desc)
-        executors[name] = executor_instance
+        tasks.append((name, executor_instance, node, desc))
+
+    # Execute all tasks in parallel
+    results = await asyncio.gather(
+        *(executor.run(node, desc) for _, executor, node, desc in tasks)
+    )
+
+    # Collect results
+    for (name, executor, _, _), result in zip(tasks, results):
+        stub_ast[name] = result
+        executors[name] = executor
 
     return stub_ast, executors
 

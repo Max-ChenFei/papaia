@@ -1,3 +1,4 @@
+import asyncio
 import runpy
 from pathlib import Path
 
@@ -29,7 +30,9 @@ def compile_and_run(file_path: Path, nodes_path: Path | None = None) -> None:
     raw_ast = read_ast(file_path)
     desc = extract_desc(raw_ast)
 
-    stub_ast, executors = place_on_exec_sites(desc, get_valid_nodes_path(nodes_path))
+    stub_ast, executors = asyncio.run(
+        place_on_exec_sites(desc, get_valid_nodes_path(nodes_path))
+    )
     new_ast = update_ast(raw_ast, stub_ast)
     compiled_file_path = file_path.with_name(file_path.stem + "_compiled.py")
     write_ast(new_ast, compiled_file_path)

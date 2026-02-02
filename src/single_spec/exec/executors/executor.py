@@ -1,4 +1,5 @@
 import ast
+import asyncio
 from string import Template
 from abc import ABC, abstractmethod
 
@@ -10,7 +11,7 @@ from ...accel_assign import assign_accel_devices_code
 class Executor(ABC):
     _desc: dict[str, Desc] = {}
 
-    def run(self, node: Node, desc: Desc) -> ast.AST:
+    async def run(self, node: Node, desc: Desc) -> ast.AST:
         self._desc[desc.ast_node.name] = desc
 
         pip_install, code, invoke_template = self._generate_code(desc)
@@ -19,7 +20,10 @@ class Executor(ABC):
             if desc.imports:
                 code = merge(ast.parse(code), desc.imports)
             code = f"{assign_accel_devices_code(desc.ast_node.name, desc.assigned_accel_devices)}\n{code}"
-        return ast.parse(self._deploy(node, desc, code, invoke_template))
+        deploy_result = await asyncio.to_thread(
+            self._deploy, node, desc, code, invoke_template
+        )
+        return ast.parse(deploy_result)
 
     def stop(self, name: str) -> None:
         """Stop any running processes or clean up resources if needed."""
