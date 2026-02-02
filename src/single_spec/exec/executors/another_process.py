@@ -8,7 +8,7 @@ import requests
 from .executor import Executor
 from ..code_gen import func2fastapi, cls2fastapi
 from ...IR import Desc, PipInstall, Node
-from ...cache import CACHE_PATH
+from ...cache import LOCAL_CACHE_DIR
 
 
 class AnotherProcess(Executor):
@@ -42,7 +42,7 @@ class AnotherProcess(Executor):
 
     def _desc_dir(self, desc: Desc) -> Path:
         desc_dir = self._cache.get(desc.ast_node.name) or (
-            CACHE_PATH / desc.ast_node.name
+            LOCAL_CACHE_DIR / desc.ast_node.name
         )
         if not desc_dir.exists():
             desc_dir.mkdir(parents=True, exist_ok=True)

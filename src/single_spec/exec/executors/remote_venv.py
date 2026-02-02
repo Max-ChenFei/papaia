@@ -6,6 +6,7 @@ import asyncssh
 
 from .another_process import AnotherProcess, split_pip_install
 from ...IR import Desc, Node
+from ...cache import add_remote_cache
 
 
 class RemoteVenv(AnotherProcess):
@@ -88,6 +89,7 @@ class RemoteVenv(AnotherProcess):
                     await sftp.put(str(req_file), f"{remote_dir}/requirements.txt")
                     await sftp.put(str(main_file), f"{remote_dir}/main.py")
                 _print_flush(f"✓ Copied code to remote directory {remote_dir}")
+                add_remote_cache(node, remote_dir)
 
                 # Create venv
                 _print_flush(f"Creating virtual environment...")
