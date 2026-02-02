@@ -41,18 +41,8 @@ class Grounding(BaseTool):
 
     def _get_detector(self):
         if self._detector is None:
-            # device = assigned_accel_devices("Grounding")
-            device = "0"  # For testing purpose, replace with assigned_accel_devices
-
-            # Convert to proper cuda device string
-            if device is not None:
-                device = f"cuda:{device}"
-            elif torch.cuda.is_available():
-                device = "cuda"
-            else:
-                device = "cpu"
-
-            print(f"Using device: {device}")
+            # device = f"cuda:{assigned_accel_devices("Grounding")}"
+            device = "cpu"
 
             self._detector = pipeline(
                 model="IDEA-Research/grounding-dino-tiny",
