@@ -7,6 +7,16 @@ from .executors import get_executor_by_name, Executor
 from ..IR import Desc, available_nodes, Node
 
 
+def print_assignment(
+    plan: dict[int, int], nodes: list[Node], tasks: list[Desc]
+) -> None:
+    """Print the assignment plan for debugging."""
+    for task_idx, node_idx in plan.items():
+        task = tasks[task_idx]
+        node = nodes[node_idx]
+        print(f"Tool '{task.ast_node.name}' assigned to Node '{node.name}' ")
+
+
 def place_on_exec_sites(
     descs: dict[str, Desc], nodes_path: str | None = None
 ) -> tuple[dict[str, ast.AST], dict[str, Executor]]:
@@ -14,8 +24,10 @@ def place_on_exec_sites(
     exec_nodes, local_index = available_nodes(nodes_path)
     plan = assignment(list(descs.values()), exec_nodes, local_index=local_index)
 
+    print_assignment(plan, exec_nodes, list(descs.values()))
+
     stub_ast = {}
-    executor = {}
+    executors = {}
     names = list(descs.keys())
     values = list(descs.values())
     for i, node_index in plan.items():
@@ -28,8 +40,9 @@ def place_on_exec_sites(
             node.executor, desc.pip_install is not None
         )
         stub_ast[name] = executor_instance.run(node, desc)
-        executor[name] = executor_instance
-    return stub_ast, executor
+        executors[name] = executor_instance
+
+    return stub_ast, executors
 
 
 def assignment(
