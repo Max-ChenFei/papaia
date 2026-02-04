@@ -216,6 +216,5 @@ class RemoteVenv(AnotherProcess):
 
 def _print_flush(msg):
     """Print with immediate flush to ensure output appears in notebooks."""
-    return
     print(msg, flush=True)
     sys.stdout.flush()
