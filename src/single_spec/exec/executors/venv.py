@@ -64,9 +64,10 @@ class VenvExecutor(AnotherProcess):
                 subprocess.run(
                     [str(pip), "install", pkg, "--index-url", index_url],
                     check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
+                    # stdout=subprocess.DEVNULL,
+                    # stderr=subprocess.DEVNULL,
                 )
+
             except subprocess.CalledProcessError as e:
                 print(f"Error installing {pkg}: {e}")
 
@@ -93,8 +94,9 @@ class VenvExecutor(AnotherProcess):
             # Run in background process
             process = subprocess.Popen(
                 [str(python), str(main_file)],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                # Don't hide output so we can see errors
+                # stdout=subprocess.DEVNULL,
+                # stderr=subprocess.DEVNULL,
             )
         except subprocess.CalledProcessError as e:
             print(f"Error running background process: {e}")

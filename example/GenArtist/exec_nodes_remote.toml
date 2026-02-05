@@ -1,0 +1,14 @@
+[nodes.local]
+executor = "local"
+cpus = 8
+memory = 32
+
+[nodes.vm1]
+executor = "remote"
+cpus = 32
+memory = 128
+accel = "RTX 8000:1"
+host = "172.30.162.209"
+port = 22
+username = "user"
+password = "123456"

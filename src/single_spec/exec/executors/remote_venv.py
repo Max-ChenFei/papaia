@@ -145,9 +145,9 @@ class RemoteVenv(AnotherProcess):
                 )
                 r4 = await conn.run(cmd, check=False)
                 if r4.exit_status != 0:
-                    print(f"  ✗ Failed to start server")
-                    print(f"  stdout: {r4.stdout}")
-                    print(f"  stderr: {r4.stderr}")
+                    _print_flush(f"  ✗ Failed to start server command")
+                    _print_flush(f"  stdout: {r4.stdout}")
+                    _print_flush(f"  stderr: {r4.stderr}")
                     sys.stdout.flush()
                     raise Exception("Failed to start server process")
 
@@ -157,11 +157,11 @@ class RemoteVenv(AnotherProcess):
 
                 # Wait for server to be ready on the remote machine first
                 _print_flush("  Waiting for server to start...")
-                await asyncio.sleep(3)  # Give server time to start
 
+                # todo: better logging here
                 # Check server logs for any startup issues
                 log_result = await conn.run(
-                    f"cat {remote_dir}/server.log 2>&1 | head -50", check=False
+                    f"cat {remote_dir}/server.log 2>&1", check=False
                 )
                 if log_result.stdout:
                     _print_flush(f"  Server startup logs:\n{log_result.stdout}")
@@ -172,7 +172,7 @@ class RemoteVenv(AnotherProcess):
                 )
 
                 try:
-                    self._wait_for_server(base_url, timeout=10)
+                    self._wait_for_server(base_url)
                     _print_flush(
                         f"  ✓ Server is accessible from local machine at {base_url}"
                     )
