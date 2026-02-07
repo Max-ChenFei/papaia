@@ -1,24 +1,27 @@
-import torch
+from io import BytesIO
+from typing import Any, Dict, List
+
 import requests
 from PIL import Image
-from io import BytesIO
+import torch
 from transformers import pipeline
-from typing import List, Any, Dict
+from langchain.agents import create_agent
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
-from langchain.agents import create_agent
-from declagent import required_cls
+
+from declagent import assigned_accel_devices, required_cls
 
 
 @required_cls(
+    entry="_run",
+    accel="RTX 8000",
     pip_install=[
         "torch --index-url https://download.pytorch.org/whl/cu124",
+        "git+https://github.com/Max-ChenFei/declagent.git",
         "transformers",
         "Pillow",
         "requests",
     ],
-    accel="RTX 8000",
-    entry="_run",
 )
 class Grounding(BaseTool):
     name: str = "grounding"
@@ -41,9 +44,16 @@ class Grounding(BaseTool):
 
     def _get_detector(self):
         if self._detector is None:
-            # device = f"cuda:{assigned_accel_devices("Grounding")}"
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            assigned_device = assigned_accel_devices("Grounding")
+            device = (
+                f"cuda:{assigned_device}"
+                if assigned_device is not None
+                else "cuda"
+                if torch.cuda.is_available()
+                else "cpu"
+            )
 
+            print(f"Using device: {device}")
             self._detector = pipeline(
                 model="IDEA-Research/grounding-dino-tiny",
                 task="zero-shot-object-detection",
