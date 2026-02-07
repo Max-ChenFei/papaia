@@ -19,7 +19,7 @@ def print_assignment(
 
 
 async def place_on_exec_sites(
-    descs: dict[str, Desc], nodes_path: str | None = None
+    descs: dict[str, Desc], nodes_path: str
 ) -> tuple[dict[str, ast.AST], dict[str, Executor]]:
     """Place on available execution nodes and return access stub and used executors."""
     exec_nodes, local_index = available_nodes(nodes_path)

@@ -1,5 +1,4 @@
 import tomllib
-from pathlib import Path
 
 
 class Node:
@@ -68,9 +67,7 @@ class Node:
             self.accel_assigned[idx] = False
 
 
-def available_nodes(
-    path: str | None = None,
-) -> tuple[list[Node], int | None]:
+def available_nodes(path: str) -> tuple[list[Node], int | None]:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
 
     nodes_tbl = data.get("nodes")
@@ -90,16 +87,33 @@ def available_nodes(
         accel_count = (
             None if accel is None else int(accel.split(":")[-1]) if ":" in accel else 1
         )
+        executor_type = cfg.get("executor")
+        if executor_type is None:
+            raise ValueError(
+                f"Node '{name}' must specify an executor type('local' or 'remote')."
+            )
+        host = cfg.get("host")
+        port = cfg.get("port")
+        username = cfg.get("username")
+        password = cfg.get("password")
+        if executor_type == "remote":
+            if host is None:
+                raise ValueError(f"Remote node '{name}' must specify a host address.")
+            if username is None or password is None:
+                raise ValueError(
+                    f"Remote node '{name}' must specify username and password."
+                )
+
         nodes.append(
             Node(
                 name=name,
-                executor=cfg.get("executor"),
+                executor=executor_type,
                 cpus=cfg.get("cpus"),
                 memory=cfg.get("memory"),
-                host=cfg.get("host"),
-                port=cfg.get("port"),
-                username=cfg.get("username"),
-                password=cfg.get("password"),
+                host=host,
+                port=port,
+                username=username,
+                password=password,
                 accel_type=accel_type,
                 accel_count=accel_count,
             )
