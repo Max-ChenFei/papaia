@@ -1,10 +1,10 @@
-from single_spec import required
+from single_spec import required_fn
 from langchain.tools import tool
 from langchain.agents import create_agent
 
 
 @tool
-@required(accel="A100:1")
+@required_fn(accel="A100:1")
 def get_weather(city: str) -> str:
     """Get weather for a given city.
     Args:

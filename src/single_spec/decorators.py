@@ -1,4 +1,4 @@
-def required(
+def required_fn(
     pip_install: str | list[str] | None = None,
     cpus: int | None = None,
     memory: int | None = None,
@@ -58,4 +58,4 @@ def required_cls(
     return decorator
 
 
-decorator_keywords = [required.__name__, required_cls.__name__]
+decorator_keywords = [required_fn.__name__, required_cls.__name__]

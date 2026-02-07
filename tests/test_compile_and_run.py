@@ -8,9 +8,9 @@ from single_spec import compile_and_run
 def test_local_inprocess(mocker, capsys):
     original_dir = os.getcwd()
 
-    src = '''from single_spec import required
+    src = '''from single_spec import required_fn
 
-@required(accel="A100:1")
+@required_fn(accel="A100:1")
 def get_weather(city: str) -> str:
     """Get weather for a given city.
     Args:
@@ -42,10 +42,10 @@ print(get_weather("San Francisco"))
 def test_venv_executor():
     original_dir = os.getcwd()
 
-    src = '''from single_spec import required
+    src = '''from single_spec import required_fn
 import requests
 
-@required(pip_install=["requests"])
+@required_fn(pip_install=["requests"])
 def get_weather(city: str) -> str:
     """Get weather for a given city.
     Args:
