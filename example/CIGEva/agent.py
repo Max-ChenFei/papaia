@@ -7,7 +7,7 @@ from typing import List, Any, Dict
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
 from langchain.agents import create_agent
-from single_spec import required_cls
+from declagent import required_cls
 
 
 @required_cls(

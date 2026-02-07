@@ -1,7 +1,7 @@
 import ast
 
 from ast_eq import ast_eq
-from single_spec.exec.code_gen import func2fastapi, cls2fastapi
+from declagent.exec.code_gen import func2fastapi, cls2fastapi
 
 
 def test_func2fastapi():

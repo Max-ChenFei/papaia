@@ -1,13 +1,36 @@
-# single-spec
+# declagent
 
-We propose a \emph{single-spec programming model} for AI agents. 
+`declagent` is a Python package that serves as the reference implementation of a declarative programming model for building tool-using AI agents.
 
-(1) At the source level, programmers define components as they do today---as ordinary functions or classes in the host language---and enrich them with lightweight annotations (e.g., required resources, running dependencies constraints).
+The model separates *what* a tool does from *where* and *how* it is executed. Developers specify tool semantics and runtime requirements declaratively, while placement, realization, and invocation decisions are deferred to a compiler.
 
-(2) From these annotated definitions, the compiler extracts a component **specification** for each component: its name, typed inputs and outputs, behaviour (as given by the function or method body), and resource requirements. 
+## User-Facing Primitives
 
-(3) From these specifications, our compiler derives (i) concrete placements, (ii) execution forms together with the necessary infra-bound plumbing, and (iii) agent-facing tool APIs.
+### Decorators
 
-## Todo
-- [ ] add more executors for Slurm or k8s
-- [ ] add caching to avoid always stop the container and install pip package at each run
+- `@required_fn`
+- `@required_cls`
+
+These decorators declare tool interfaces together with their runtime requirements (e.g., accelerator type, memory constraints).
+
+### Runtime API
+
+- `assigned_accel_devices`
+
+This API allows a tool to query the accelerator devices assigned to it at runtime, enabling device-aware implementations without hard-coding placement decisions.
+
+### Compiler Interface
+
+- `declagent run`  
+  Derives a feasible realization of the declared tools—including placement and invocation strategy—and executes the agent program.
+
+- `declagent clear`  
+  Removes cached artifacts generated during compilation and execution, including provisioned virtual Python environments.
+
+## Examples
+
+The [`examples/`](./examples) directory contains self-contained example programs illustrating typical usage of the programming model. Each example demonstrates:
+
+- declaring tools using `@required_fn` or `@required_cls`,
+- accessing assigned runtime resources via the runtime API, and
+- executing an agent program through the `declagent` compiler interface.

@@ -6,7 +6,7 @@ from .cache import clear_cache
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Single-spec CLI tool")
+    parser = argparse.ArgumentParser(description="declagent CLI tool")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     run_parser = subparsers.add_parser("run", help="Run a Python file")
     run_parser.add_argument("file", help="Path to the Python file to compile and run")

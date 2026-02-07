@@ -1,4 +1,4 @@
-from single_spec import required_fn
+from declagent import required_fn
 from langchain.tools import tool
 from langchain.agents import create_agent
 

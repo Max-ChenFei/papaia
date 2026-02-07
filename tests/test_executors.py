@@ -2,9 +2,9 @@ import ast
 import requests
 from string import Template
 
-from single_spec.exec.executors.venv import VenvExecutor
-from single_spec.exec.executors.another_process import split_pip_install
-from single_spec.IR import Desc, Metadata
+from declagent.exec.executors.venv import VenvExecutor
+from declagent.exec.executors.another_process import split_pip_install
+from declagent.IR import Desc, Metadata
 
 
 def test_venv_executor():

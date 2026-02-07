@@ -1,8 +1,8 @@
 import ast
 
 from ast_eq import ast_eq
-from single_spec.IR.desc import split_decorator, extract_desc
-from single_spec.IR.metadata import extract_metadata
+from declagent.IR.desc import split_decorator, extract_desc
+from declagent.IR.metadata import extract_metadata
 
 
 def test_extract_fn_metadata():
@@ -108,7 +108,7 @@ def test_extract_desc_from_def_imports():
 import requests
 from PIL import Image
 from typing import List
-from single_spec import required_fn
+from declagent import required_fn
 
 @required_fn(pip_install="path/requirements.txt", accel="A100:2")
 def my_function():

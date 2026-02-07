@@ -2,13 +2,13 @@ import os
 from pathlib import Path
 import tempfile
 
-from single_spec import compile_and_run
+from declagent import compile_and_run
 
 
 def test_local_inprocess(mocker, capsys):
     original_dir = os.getcwd()
 
-    src = '''from single_spec import required_fn
+    src = '''from declagent import required_fn
 
 @required_fn(accel="A100:1")
 def get_weather(city: str) -> str:
@@ -42,7 +42,7 @@ print(get_weather("San Francisco"))
 def test_venv_executor(capsys):
     original_dir = os.getcwd()
 
-    src = '''from single_spec import required_fn
+    src = '''from declagent import required_fn
 import requests
 
 @required_fn(pip_install=["requests"])

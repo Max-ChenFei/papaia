@@ -1,6 +1,6 @@
 import os
 
-from single_spec.accel_assign import (
+from declagent.accel_assign import (
     assign_accel_devices_code,
     assigned_accel_devices,
 )

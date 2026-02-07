@@ -6,10 +6,12 @@ from diffusers import StableDiffusionXLPipeline
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
 from langchain.agents import create_agent
-from single_spec import required_cls, assigned_accel_devices
+from declagent import required_cls, assigned_accel_devices
 
 
 @required_cls(
+    entry="_run",
+    accel="RTX 8000",
     pip_install=[
         "torch --index-url https://download.pytorch.org/whl/cu124",
         "transformers",
@@ -17,8 +19,6 @@ from single_spec import required_cls, assigned_accel_devices
         "Pillow",
         "requests",
     ],
-    accel="RTX 8000",
-    entry="_run",
 )
 class Text2Image(BaseTool):
     name: str = "text2image"

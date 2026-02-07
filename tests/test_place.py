@@ -1,9 +1,9 @@
 import ast
 import pytest
 
-from single_spec.IR import Node
-from single_spec.exec.place import assignment
-from single_spec.IR import Desc, Metadata, Resources
+from declagent.IR import Node
+from declagent.exec.place import assignment
+from declagent.IR import Desc, Metadata, Resources
 
 
 @pytest.fixture
