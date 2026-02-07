@@ -11,4 +11,12 @@ accel = "RTX 8000:1"
 host = "172.30.162.209"
 port = 22
 username = "user"
-password = "123456"
+
+[nodes.vm2]
+executor = "remote"
+cpus = 8
+memory = 48
+accel = "RTX 4090:1"
+host = "c8891fda-f917-48e0-96b0-9d8d60bbccb2.tenants.hivecompute.ai"
+port = 32377
+username = "ubuntu"

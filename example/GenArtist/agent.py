@@ -1,12 +1,14 @@
 import tempfile
 from typing import Any, Dict
+
 import requests
 import torch
 from diffusers import StableDiffusionXLPipeline
+from langchain.agents import create_agent
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
-from langchain.agents import create_agent
-from declagent import required_cls, assigned_accel_devices
+
+from declagent import assigned_accel_devices, required_cls
 
 
 @required_cls(
@@ -14,6 +16,7 @@ from declagent import required_cls, assigned_accel_devices
     accel="RTX 8000",
     pip_install=[
         "torch --index-url https://download.pytorch.org/whl/cu124",
+        "git+https://github.com/Max-ChenFei/declagent.git",
         "transformers",
         "diffusers",
         "Pillow",
@@ -38,8 +41,14 @@ class Text2Image(BaseTool):
 
     def _get_pipe(self):
         if self._pipe is None:
-            # device = f"cuda:{assigned_accel_devices('Text2Image')}"
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            assigned_device = assigned_accel_devices("Grounding")
+            device = (
+                f"cuda:{assigned_device}"
+                if assigned_device is not None
+                else "cuda"
+                if torch.cuda.is_available()
+                else "cpu"
+            )
             print(f"Using device: {device}")
             pipe = StableDiffusionXLPipeline.from_pretrained(
                 "stabilityai/stable-diffusion-xl-base-1.0",
