@@ -1,11 +1,8 @@
 import ast
 import asyncio
-from string import Template
 from abc import ABC, abstractmethod
 
 from ...IR import Desc, Node
-from ...utils import merge
-from ...accel_assign import assign_accel_devices_code
 
 
 class Executor(ABC):
@@ -16,14 +13,12 @@ class Executor(ABC):
 
         pip_install, code, invoke_template = self._generate_code(desc)
         desc.append_pip_install(pip_install)
-        if code is not None:
-            if desc.imports:
-                code = merge(ast.parse(code), desc.imports)
-            code = f"{assign_accel_devices_code(desc.ast_node.name, desc.assigned_accel_devices)}\n{code}"
-        deploy_result = await asyncio.to_thread(
-            self._deploy, node, desc, code, invoke_template
+
+        url = await asyncio.to_thread(self._deploy, node, desc, code)
+        access_stub = (
+            invoke_template.substitute(base_url=url) if url else invoke_template
         )
-        return ast.parse(deploy_result)
+        return ast.parse(access_stub)
 
     def stop(self, name: str) -> None:
         """Stop any running processes or clean up resources if needed."""
@@ -41,12 +36,6 @@ class Executor(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _deploy(
-        self,
-        node: Node,
-        desc: Desc,
-        generate_code: str | None,
-        invoke_template: Template,
-    ) -> str:
+    def _deploy(self, node: Node, desc: Desc, generate_code: str) -> str:
         """Deploy artifact and return an access stub, make sure to keep the same signature."""
         raise NotImplementedError

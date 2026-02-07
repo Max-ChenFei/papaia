@@ -6,7 +6,9 @@ from .util import extract_fields_and_call_args, get_docstring_stmt
 
 
 def func2fastapi(fn: ast.FunctionDef) -> tuple[list[str], str, str]:
-    """Generate a FastAPI app template for the given function ast node and return the code template to invoke it."""
+    """
+    Return the pip install list, FastAPI server code (str), and the code template (str) to invoke the FastAPI endpoint for the given function AST node.
+    """
     # Use a copy of the function without decorators when generating the FastAPI code
     fn_no_decorators = deepcopy(fn)
     fn_no_decorators.decorator_list = []

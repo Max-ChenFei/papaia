@@ -1,6 +1,5 @@
 import ast
 from pathlib import Path
-from string import Template
 import time
 
 import requests
@@ -9,6 +8,8 @@ from .executor import Executor
 from ..code_gen import func2fastapi, cls2fastapi
 from ...IR import Desc, PipInstall, Node
 from ...cache import LOCAL_CACHE_DIR
+from ...utils import merge
+from ...accel_assign import assign_accel_devices_code
 
 
 class AnotherProcess(Executor):
@@ -22,9 +23,9 @@ class AnotherProcess(Executor):
 
     def _generate_code(self, desc: Desc) -> tuple[list[str] | None, str | None, str]:
         if isinstance(desc.ast_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            return func2fastapi(desc.ast_node)
+            pip_install, code_str, invoke_template = func2fastapi(desc.ast_node)
         elif isinstance(desc.ast_node, ast.ClassDef):
-            return cls2fastapi(
+            pip_install, code_str, invoke_template = cls2fastapi(
                 desc.ast_node,
                 desc.metadata.entry,
                 desc.metadata.setup,
@@ -35,9 +36,12 @@ class AnotherProcess(Executor):
                 f"Unsupported AST node type: {type(desc.ast_node)}"
             )
 
-    def _deploy(
-        self, node: Node, desc: Desc, generate_code: str, invoke_template: Template
-    ) -> str:
+        if desc.imports:
+            code = merge(ast.parse(code_str), desc.imports)
+        code = f"{assign_accel_devices_code(desc.ast_node.name, desc.assigned_accel_devices)}\n{code}"
+        return pip_install, code, invoke_template
+
+    def _deploy(self, node: Node, desc: Desc, generate_code: str) -> str:
         raise NotImplementedError
 
     def _desc_dir(self, desc: Desc) -> Path:

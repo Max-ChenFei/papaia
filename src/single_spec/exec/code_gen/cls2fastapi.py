@@ -11,7 +11,9 @@ def cls2fastapi(
     setup: str | None = None,
     teardown: str | None = None,
 ) -> tuple[list[str], str, Template]:
-    """Generate a FastAPI app template for the given class ast node and return the code template to invoke it."""
+    """
+    Return the pip install list, FastAPI server code (str), and the code template (str) to invoke the FastAPI endpoint for the given function AST node.
+    """
     cls_no_decorators = deepcopy(cls)
     cls_no_decorators.decorator_list = []  # remove decorators
     cls_no_decorators.bases = []  # remove the child inheritance

@@ -1,7 +1,6 @@
-import subprocess
 import sys
 import socket
-from string import Template
+import subprocess
 from pathlib import Path
 from venv import create
 
@@ -27,9 +26,7 @@ class VenvExecutor(AnotherProcess):
                 process.wait()
             del self._processes[name]
 
-    def _deploy(
-        self, node: Node, desc: Desc, generate_code: str, invoke_template: Template
-    ) -> str:
+    def _deploy(self, node: Node, desc: Desc, generate_code: str) -> str:
         desc_dir = self._desc_dir(desc)
         venv = self._create_venv(desc_dir)
 
@@ -41,7 +38,7 @@ class VenvExecutor(AnotherProcess):
         base_url = f"http://localhost:{port}"
         self._wait_for_server(base_url)
 
-        return invoke_template.substitute(base_url=base_url)
+        return base_url
 
     def _create_venv(self, dir: Path):
         venv_path = dir / ".venv"

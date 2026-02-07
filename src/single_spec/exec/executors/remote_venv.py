@@ -1,8 +1,7 @@
-import asyncio
 import sys
-from string import Template
-from zipfile import Path
+import asyncio
 import asyncssh
+from pathlib import Path
 
 from .another_process import AnotherProcess, split_pip_install
 from ...IR import Desc, Node
@@ -40,12 +39,10 @@ class RemoteVenv(AnotherProcess):
             except Exception as e:
                 _print_flush(f"Error stopping remote server: {e}")
 
-    def _deploy(
-        self, node: Node, desc: Desc, generate_code: str, invoke_template: Template
-    ) -> str:
+    def _deploy(self, node: Node, desc: Desc, generate_code: str) -> str:
         desc_dir = self._desc_dir(desc)
         base_url = asyncio.run(self.deploy_remote(node, desc, desc_dir, generate_code))
-        return invoke_template.substitute(base_url=base_url)
+        return base_url
 
     async def deploy_remote(
         self,
