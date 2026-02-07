@@ -27,10 +27,7 @@ class RemoteVenv(AnotherProcess):
         remote_dir = proc_info["remote_dir"]
 
         async with asyncssh.connect(
-            host=node.host,
-            port=node.port,
-            username=node.username,
-            password=node.password,
+            host=node.host, port=node.port, username=node.username
         ) as conn:
             cmd = f"pkill -f '{remote_dir}/main.py'"
             try:
@@ -57,10 +54,7 @@ class RemoteVenv(AnotherProcess):
         try:
             _print_flush(f"Connecting to {node.host}:{node.port} via SSH...")
             async with asyncssh.connect(
-                host=node.host,
-                port=node.port,
-                username=node.username,
-                password=node.password,
+                host=node.host, port=node.port, username=node.username
             ) as conn:
                 _print_flush(f"✓ Connected to {node.host}:{node.port} via SSH")
                 _print_flush("Allocating remote port...")

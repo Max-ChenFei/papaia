@@ -37,7 +37,6 @@ def test_available_exec_nodes_file():
     assert vm1.host == "gpu-cluster.example.com"
     assert vm1.port == 22
     assert vm1.username == "user"
-    assert vm1.password == "123456"
 
 
 def test_get_accel_devices_allocates():

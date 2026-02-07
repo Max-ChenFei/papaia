@@ -29,7 +29,6 @@ def save_remote_cache_config() -> None:
             "host": node.host,
             "port": node.port,
             "username": node.username,
-            "password": node.password,
         }
         for node, remote_dir in REMOTE_CACHE
     ]
@@ -50,10 +49,7 @@ async def clear_remote_cache() -> None:
 
     for cache in remote_cache:
         async with asyncssh.connect(
-            host=cache["host"],
-            port=cache["port"],
-            username=cache["username"],
-            password=cache["password"],
+            host=cache["host"], port=cache["port"], username=cache["username"]
         ) as conn:
             try:
                 await conn.run(f"rm -rf {cache['remote_dir']}")

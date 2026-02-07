@@ -13,7 +13,6 @@ class Node:
         host: str | None = None,
         port: int | None = None,
         username: str | None = None,
-        password: str | None = None,
     ):
         self.name = name
         self.executor = executor
@@ -24,7 +23,6 @@ class Node:
         self.host = host
         self.port = port or 22
         self.username = username
-        self.password = password
 
         self.accel_assignment: dict[str, list] = {}  # e.g., {"task1": [0,1]}
         self.accel_assigned = [False] * (accel_count or 0)
@@ -95,14 +93,11 @@ def available_nodes(path: str) -> tuple[list[Node], int | None]:
         host = cfg.get("host")
         port = cfg.get("port")
         username = cfg.get("username")
-        password = cfg.get("password")
         if executor_type == "remote":
             if host is None:
                 raise ValueError(f"Remote node '{name}' must specify a host address.")
-            if username is None or password is None:
-                raise ValueError(
-                    f"Remote node '{name}' must specify username and password."
-                )
+            if username is None:
+                raise ValueError(f"Remote node '{name}' must specify a username.")
 
         nodes.append(
             Node(
@@ -113,7 +108,6 @@ def available_nodes(path: str) -> tuple[list[Node], int | None]:
                 host=host,
                 port=port,
                 username=username,
-                password=password,
                 accel_type=accel_type,
                 accel_count=accel_count,
             )
