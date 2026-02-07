@@ -1,7 +1,7 @@
 import ast
-from single_spec.exec.code_gen import func2fastapi, cls2fastapi
 
 from ast_eq import ast_eq
+from single_spec.exec.code_gen import func2fastapi, cls2fastapi
 
 
 def test_func2fastapi():
@@ -19,7 +19,7 @@ def add2(a: int, b: int = 1) -> int:
     return a + b
     '''
 
-    _, code, invoke_template = func2fastapi(ast.parse(src).body[0])
+    pip_install, code, invoke_template = func2fastapi(ast.parse(src).body[0])
 
     assert ast_eq(
         ast.parse(code),
@@ -76,9 +76,12 @@ def add2_endpoint(payload: Add2Request):
     url = f'$base_url/add2'
     payload = {'a': a, 'b': b}
     response = requests.post(url, json=payload)
-    response.raise_for_status()
+    if response.status_code != 200:
+        error_detail = response.json().get('detail', response.text) if response.headers.get('content-type') == 'application/json' else response.text
+        raise Exception(f'Server error ({response.status_code}): {error_detail}')
     return response.json()['result']'''
     )
+    assert pip_install == ["fastapi", "pydantic"]
 
 
 def test_cls2fastapi():
@@ -102,7 +105,7 @@ def test_cls2fastapi():
     def teardown(self):
         print("teardown called")
     '''
-    _, code, invoke_template = cls2fastapi(
+    pip_install, code, invoke_template = cls2fastapi(
         ast.parse(src).body[0], entry="add2", setup="setup", teardown="teardown"
     )
     assert ast_eq(
@@ -177,13 +180,16 @@ class Adder(BaseTool):
         url = f'$base_url/adder'
         payload = {'a': a, 'b': b}
         response = requests.post(url, json=payload)
-        response.raise_for_status()
+        if response.status_code != 200:
+            error_detail = response.json().get('detail', response.text) if response.headers.get('content-type') == 'application/json' else response.text
+            raise Exception(f'Server error ({response.status_code}): {error_detail}')
         return response.json()['result']
     
     def setup(self):
-        print("setup called")
+        print('setup called')
     
     def teardown(self):
-        print("teardown called")
+        print('teardown called')
     '''),
     )
+    assert pip_install == ["fastapi", "pydantic"]

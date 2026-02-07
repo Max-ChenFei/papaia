@@ -4,8 +4,12 @@ cpus = 8
 memory = 32
 accel = "A100:2"
 
-[nodes.gpu_k8s]
-executor = "k8s"
+[nodes.vm1]
+executor = "remote"
 cpus = 32
 memory = 128
 accel = "A100:6"
+host = "gpu-cluster.example.com"
+port = 22
+username = "user"
+password = "123456"

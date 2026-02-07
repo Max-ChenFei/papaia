@@ -2,6 +2,8 @@ import ast
 import copy
 import tempfile
 import subprocess
+import shutil
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -73,8 +75,27 @@ def delete_file(file_path: Path):
 
 
 def ruff_fix(file_path: Path):
+    # Try to find ruff in the current environment or PATH
+    ruff_cmd = shutil.which("ruff")
+
+    # If not found in PATH, try the venv Scripts directory (Windows) or bin (Unix)
+    if not ruff_cmd:
+        venv_path = Path(sys.executable).parent
+        potential_paths = [
+            venv_path / "ruff.exe",  # Windows
+            venv_path / "ruff",  # Unix-like
+        ]
+        for path in potential_paths:
+            if path.exists():
+                ruff_cmd = str(path)
+                break
+
+    # If still not found, silently skip (ruff is optional for fixing)
+    if not ruff_cmd:
+        return
+
     subprocess.run(
-        ["ruff", "check", str(file_path), "--fix"],
+        [ruff_cmd, "check", str(file_path), "--fix"],
         check=False,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -86,7 +107,7 @@ def read_file(file_path: Path) -> str:
 
 
 def merge(node: ast.AST, all_imports: list[ast.stmt]) -> str:
-    """merge the code and remove unused imports."""
+    """merge the code and remove unused imports and return the merged code in a string."""
     mod = ast.Module(body=all_imports + [node], type_ignores=[])
     with tempfile.TemporaryDirectory() as tmpdir:
         file_path = Path(tmpdir) / "temp.py"

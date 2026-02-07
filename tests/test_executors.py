@@ -1,9 +1,9 @@
-import requests
 import ast
+import requests
+from string import Template
 
 from single_spec.exec.executors.venv import VenvExecutor
 from single_spec.exec.executors.another_process import split_pip_install
-from string import Template
 from single_spec.IR import Desc, Metadata
 
 
@@ -52,12 +52,11 @@ def add2_endpoint(payload: Add2Request):
         metadata=Metadata(pip_install=(["fastapi", "uvicorn", "pydantic"])),
     )
     venv_executor = VenvExecutor()
-    invoke = venv_executor._deploy(
-        node=None, desc=desc, generate_code=server_code, invoke_template=template
-    )
+    base_url = venv_executor._deploy(node=None, desc=desc, generate_code=server_code)
 
+    invoke = template.substitute(base_url=base_url)
     assert "base_url=http://localhost:" in invoke
-    request_url = invoke.split("base_url=")[1] + "/add2"
+    request_url = base_url + "/add2"
 
     response = requests.post(
         request_url,

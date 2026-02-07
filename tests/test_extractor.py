@@ -1,9 +1,8 @@
 import ast
 
+from ast_eq import ast_eq
 from single_spec.IR.desc import split_decorator, extract_desc
 from single_spec.IR.metadata import extract_metadata
-
-from ast_eq import ast_eq
 
 
 def test_extract_fn_metadata():
@@ -40,7 +39,7 @@ def my_function():
 
 def test_extract_desc_from_def():
     source = """
-@required(pip_install="path/requirements.txt", accel="A100:2")
+@required_fn(pip_install="path/requirements.txt", accel="A100:2")
 @tool
 @another_decorator(param=42)
 def my_function():
@@ -109,9 +108,9 @@ def test_extract_desc_from_def_imports():
 import requests
 from PIL import Image
 from typing import List
-from single_spec import required
+from single_spec import required_fn
 
-@required(pip_install="path/requirements.txt", accel="A100:2")
+@required_fn(pip_install="path/requirements.txt", accel="A100:2")
 def my_function():
     a: List[int] = [1, 2, 3]
     print("Using torch:", torch.__version__)

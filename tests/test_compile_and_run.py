@@ -39,7 +39,7 @@ print(get_weather("San Francisco"))
         os.chdir(original_dir)
 
 
-def test_venv_executor():
+def test_venv_executor(capsys):
     original_dir = os.getcwd()
 
     src = '''from single_spec import required_fn
@@ -67,8 +67,8 @@ print(get_weather("San Francisco"))
 
             compile_and_run(tmp_file)
 
-            # captured = capsys.readouterr()
-            # assert "It's always sunny in San Francisco with requests" in captured.out
+            captured = capsys.readouterr()
+            assert "It's always sunny in San Francisco with requests" in captured.out
 
     finally:
         os.chdir(original_dir)
