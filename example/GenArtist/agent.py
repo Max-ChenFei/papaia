@@ -41,15 +41,11 @@ class Text2Image(BaseTool):
 
     def _get_pipe(self):
         if self._pipe is None:
-            assigned_device = assigned_accel_devices("Grounding")
-            device = (
-                f"cuda:{assigned_device}"
-                if assigned_device is not None
-                else "cuda"
-                if torch.cuda.is_available()
-                else "cpu"
-            )
-            print(f"Using device: {device}")
+            assigned_device = assigned_accel_devices("Text2Image")
+            if assigned_device is not None:
+                device = f"cuda:{assigned_device}"
+            else:
+                device = "cuda" if torch.cuda.is_available() else "cpu"
             pipe = StableDiffusionXLPipeline.from_pretrained(
                 "stabilityai/stable-diffusion-xl-base-1.0",
                 torch_dtype=torch.float16,
@@ -75,13 +71,9 @@ class Text2Image(BaseTool):
 
 
 llm = ChatOllama(model="qwen3:0.6b", validate_model_on_init=True, temperature=0)
-
-
 agent = create_agent(
     model=llm, tools=[Text2Image()], system_prompt="You are a helpful assistant."
 )
-
-# Agent run test
 text = "Small silhouette of a climber on an enormous black cliff, endless vertical wall, minimal composition, extreme scale contrast, monochrome, symbol of resilience and discipline"
 prompt = f"""You must call the text2image tool with the argument 'text': {text} to generate an image. Return only the URL of the image without any extra text."""
 result = agent.invoke({"messages": [{"role": "user", "content": prompt}]})

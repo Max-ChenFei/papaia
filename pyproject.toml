@@ -37,6 +37,8 @@ example =  [
     "toml>=0.10.2",
     "transformers>=5.0.0",
     "torch",
+    "smolagents[openai]>=1.22.0",
+    "gradio>=6.5.1",
 ]
 
 [[tool.uv.index]]

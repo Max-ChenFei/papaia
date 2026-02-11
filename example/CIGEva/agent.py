@@ -1,14 +1,11 @@
 from io import BytesIO
 from typing import Any, Dict, List
-
 import requests
 from PIL import Image
-import torch
 from transformers import pipeline
 from langchain.agents import create_agent
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
-
 from declagent import assigned_accel_devices, required_cls
 
 
@@ -38,22 +35,12 @@ class Grounding(BaseTool):
                 "maximum": 1.0,
             },
         },
-        "required": ["image_url", "labels"],
     }
     _detector: Any = None
 
     def _get_detector(self):
         if self._detector is None:
-            assigned_device = assigned_accel_devices("Grounding")
-            device = (
-                f"cuda:{assigned_device}"
-                if assigned_device is not None
-                else "cuda"
-                if torch.cuda.is_available()
-                else "cpu"
-            )
-
-            print(f"Using device: {device}")
+            device = f"cuda:{assigned_accel_devices('Grounding')}"
             self._detector = pipeline(
                 model="IDEA-Research/grounding-dino-tiny",
                 task="zero-shot-object-detection",
@@ -61,12 +48,7 @@ class Grounding(BaseTool):
             )
         return self._detector
 
-    def _run(
-        self,
-        image_url: str,
-        labels: List[str],
-        threshold: float = 0.3,
-    ):
+    def _run(self, image_url: str, labels: List[str], threshold: float = 0.3):
         img = Image.open(BytesIO(requests.get(image_url).content)).convert("RGB")
         labels = [label if label.endswith(".") else label + "." for label in labels]
         detector = self._get_detector()
@@ -74,20 +56,10 @@ class Grounding(BaseTool):
         return [result["box"] for result in results]
 
 
-llm = ChatOllama(
-    model="qwen3:4b",
-    validate_model_on_init=True,
-    temperature=0,
-)
-
-
+llm = ChatOllama(model="qwen3:0.6b", validate_model_on_init=True, temperature=0)
 agent = create_agent(
-    model=llm,
-    tools=[Grounding()],
-    system_prompt="You are a helpful assistant.",
+    model=llm, tools=[Grounding()], system_prompt="You are a helpful assistant."
 )
-
-# Agent run test
 image_url = "http://images.cocodataset.org/val2017/000000039769.jpg"
 prompt = f"Call the grounding tool now.\n Use image_url = {image_url}\n labels=['cat'], threshold=0.3."
 result = agent.invoke({"messages": [{"role": "user", "content": prompt}]})
