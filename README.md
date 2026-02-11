@@ -1,19 +1,22 @@
 # declagent
 
-`declagent` is a Python package that serves as the reference implementation of a declarative programming model for building tool-using AI agents.
-
-The model separates *what* a tool does from *where* and *how* it is executed. Developers specify tool semantics and runtime requirements declaratively, while placement, realization, and invocation decisions are deferred to a compiler.
+`declagent` is a Python package to support the proposed programming mode for building tool-using AI agents in the paper.
 
 ## User-Facing Primitives
 
-### Decorators
+### Execution Nodes
+
+- `@exec_nodes.toml`
+
+
+Declares the available execution nodes and their resource capacities in a configuration file.
+
+### Agent Program
 
 - `@required_fn`
 - `@required_cls`
 
 These decorators declare tool interfaces together with their runtime requirements (e.g., accelerator type, memory constraints).
-
-### Runtime API
 
 - `assigned_accel_devices`
 
@@ -34,3 +37,4 @@ The [`examples/`](./examples) directory contains self-contained example programs
 - declaring tools using `@required_fn` or `@required_cls`,
 - accessing assigned runtime resources via the runtime API, and
 - executing an agent program through the `declagent` compiler interface.
+
