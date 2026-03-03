@@ -1,7 +1,7 @@
 import os
 
 PREFIX = "TOOL_ACCEL_INDEXES__"
-
+# use env not global variable for shared state across processes
 
 def assign_accel_devices_code(name: str, indexes: str | None) -> None:
     """Assign accelerator indexes as a raw string like '0,1' to env."""
