@@ -38,3 +38,19 @@ The [`examples/`](./examples) directory contains self-contained example programs
 - accessing assigned runtime resources via the runtime API, and
 - executing an agent program through the `decl` compiler interface.
 
+## Development
+For `decl`  
+```bash
+uv sync
+```
+
+For `unit tests`
+```bash
+uv sync --group test
+uv run pytest
+```
+
+For `examples`
+```bash
+uv sync --group example
+```
