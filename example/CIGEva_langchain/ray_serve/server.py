@@ -1,11 +1,10 @@
 from ray import serve
 
-import requests
-from fastapi import FastAPI, Body
 from io import BytesIO
+import requests
 from PIL import Image
 from transformers import pipeline
-
+from fastapi import FastAPI, Body
 
 app = FastAPI(title="Web Server for hosting Grounding Tool")
 

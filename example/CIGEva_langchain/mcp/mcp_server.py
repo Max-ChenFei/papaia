@@ -1,9 +1,11 @@
 from fastmcp import FastMCP
+
 from io import BytesIO
+from typing import List
 import requests
 from PIL import Image
 from transformers import pipeline
-from typing import List
+
 
 mcp = FastMCP("MCP Server for Hosting Grounding Tool")
 
