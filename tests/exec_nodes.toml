@@ -1,11 +1,11 @@
 [nodes.local]
-executor = "local"
+location = "local"
 cpus = 8
 memory = 32
 accel = "A100:2"
 
 [nodes.vm1]
-executor = "remote"
+location = "remote"
 cpus = 32
 memory = 128
 accel = "A100:6"

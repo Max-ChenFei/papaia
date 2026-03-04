@@ -35,7 +35,7 @@ def test_place_all_local(tasks):
     nodes = [
         Node(
             name="local",
-            executor="",
+            location="",
             cpus=8,
             memory=16,
             accel_type="A100",
@@ -43,7 +43,7 @@ def test_place_all_local(tasks):
         ),  # orchestrator here maybe
         Node(
             name="gpu_k8s",
-            executor="",
+            location="",
             cpus=32,
             memory=128,
             accel_type="A100",
@@ -51,7 +51,7 @@ def test_place_all_local(tasks):
         ),
         Node(
             name="gpu_2",
-            executor="",
+            location="",
             cpus=16,
             memory=64,
             accel_type="A100",
@@ -66,7 +66,7 @@ def test_place_mixed(tasks):
     nodes = [
         Node(
             name="local",
-            executor="",
+            location="",
             cpus=4,
             memory=8,
             accel_type="A100",
@@ -74,7 +74,7 @@ def test_place_mixed(tasks):
         ),  # orchestrator here maybe
         Node(
             name="gpu_k8s",
-            executor="",
+            location="",
             cpus=32,
             memory=128,
             accel_type="A100",
@@ -82,7 +82,7 @@ def test_place_mixed(tasks):
         ),
         Node(
             name="gpu_2",
-            executor="",
+            location="",
             cpus=16,
             memory=64,
             accel_type="A100",
@@ -97,7 +97,7 @@ def test_place_less_nodes(tasks):
     nodes = [
         Node(
             name="local",
-            executor="",
+            location="",
             cpus=2,
             memory=2,
             accel_type="A100",
@@ -105,7 +105,7 @@ def test_place_less_nodes(tasks):
         ),  # orchestrator here maybe
         Node(
             name="gpu_k8s",
-            executor="",
+            location="",
             cpus=32,
             memory=128,
             accel_type="A100",
@@ -113,7 +113,7 @@ def test_place_less_nodes(tasks):
         ),
         Node(
             name="gpu_2",
-            executor="",
+            location="",
             cpus=16,
             memory=64,
             accel_type="A100",

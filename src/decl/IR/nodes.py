@@ -5,7 +5,7 @@ class Node:
     def __init__(
         self,
         name: str,
-        executor: str,
+        location: str,
         cpus: int | None = None,
         memory: int | None = None,
         accel_type: str | None = None,
@@ -15,7 +15,7 @@ class Node:
         username: str | None = None,
     ):
         self.name = name
-        self.executor = executor
+        self.location = location
         self.cpus = cpus
         self.memory = memory
         self.accel_type = accel_type
@@ -29,7 +29,7 @@ class Node:
 
     def __str__(self):
         return (
-            f"Node(name={self.name}, executor={self.executor}, cpus={self.cpus}, "
+            f"Node(name={self.name}, location={self.location}, cpus={self.cpus}, "
             f"memory={self.memory}, accel_type={self.accel_type}, "
             f"accel_count={self.accel_count})"
         )
@@ -85,15 +85,15 @@ def available_nodes(path: str) -> tuple[list[Node], int | None]:
         accel_count = (
             None if accel is None else int(accel.split(":")[-1]) if ":" in accel else 1
         )
-        executor_type = cfg.get("executor")
-        if executor_type is None:
+        location = cfg.get("location")
+        if location is None:
             raise ValueError(
                 f"Node '{name}' must specify an executor type('local' or 'remote')."
             )
         host = cfg.get("host")
         port = cfg.get("port")
         username = cfg.get("username")
-        if executor_type == "remote":
+        if location == "remote":
             if host is None:
                 raise ValueError(f"Remote node '{name}' must specify a host address.")
             if username is None:
@@ -102,7 +102,7 @@ def available_nodes(path: str) -> tuple[list[Node], int | None]:
         nodes.append(
             Node(
                 name=name,
-                executor=executor_type,
+                location=location,
                 cpus=cfg.get("cpus"),
                 memory=cfg.get("memory"),
                 host=host,

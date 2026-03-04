@@ -40,7 +40,7 @@ def test_available_exec_nodes_file():
 
 
 def test_get_accel_devices_allocates():
-    n = Node(name="n1", executor="docker", accel_type="gpu", accel_count=4)
+    n = Node(name="n1", location="docker", accel_type="gpu", accel_count=4)
 
     devs = n.get_accel_devices(2)
     assert devs == "0,1"
@@ -52,7 +52,7 @@ def test_get_accel_devices_allocates():
 
 
 def test_release_accel_devices_frees():
-    n = Node(name="n1", executor="docker", accel_type="gpu", accel_count=4)
+    n = Node(name="n1", location="docker", accel_type="gpu", accel_count=4)
 
     devs = n.get_accel_devices(3)
     assert devs == "0,1,2"

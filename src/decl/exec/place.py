@@ -41,7 +41,7 @@ async def place_on_exec_sites(
         desc.assigned_node = node
         desc.assigned_accel_devices = node.get_accel_devices(desc.resources.accel_count)
         executor_instance = get_executor_by_name(
-            node.executor, desc.pip_install is not None
+            node.location, desc.pip_install is not None
         )
         tasks.append((name, executor_instance, node, desc))
 

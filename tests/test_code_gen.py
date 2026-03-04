@@ -86,7 +86,10 @@ def add2_endpoint(payload: Add2Request):
 
 def test_cls2fastapi():
     src = '''class Adder(BaseTool):
-
+    def __init__(self):
+        super().__init__()
+        self.pipe = None
+    
     def add2(self, a: int, b: int = 1) -> int:
         """Adds two numbers.
 
@@ -115,6 +118,9 @@ from pydantic import BaseModel
 app = FastAPI()
 # --- your class (kept as-is) ---
 class Adder:
+    def __init__(self):
+        super().__init__()
+        self.pipe = None
 
     def add2(self, a: int, b: int=1) -> int:
         """Adds two numbers.
@@ -165,7 +171,9 @@ def adder_endpoint(payload: AdderRequest):
         ast.parse(invoke_template.template),
         ast.parse('''
 class Adder(BaseTool):
-
+    def __init__(self):
+        super().__init__()
+                  
     def add2(self, a: int, b: int = 1) -> int:
         """Adds two numbers.
 
@@ -184,12 +192,6 @@ class Adder(BaseTool):
             error_detail = response.json().get('detail', response.text) if response.headers.get('content-type') == 'application/json' else response.text
             raise Exception(f'Server error ({response.status_code}): {error_detail}')
         return response.json()['result']
-    
-    def setup(self):
-        print('setup called')
-    
-    def teardown(self):
-        print('teardown called')
     '''),
     )
     assert pip_install == ["fastapi", "pydantic"]
