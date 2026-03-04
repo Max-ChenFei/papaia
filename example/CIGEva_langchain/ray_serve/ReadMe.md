@@ -1,4 +1,11 @@
 # Terminal Commands for Running the Agent
+
+## install ray and start the ray head
+```bash
+python -m pip install -U "ray[serve]"
+ray start --head
+```
+
 ## Run the server
 ```bash
 scp -r grounding user@172.30.162.209:~/ # copy the grounding folder to the remote node
