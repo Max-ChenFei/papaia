@@ -4,7 +4,7 @@ from smolagents import tool, OpenAIModel
 from smolagents import ToolCallingAgent
 
 
-@tool(name="text2image")
+@tool
 def text2image_proxy(text: str, height: int = 1024, width: int = 1024) -> str:
     """Generate images from text descriptions and return URL of generated image.
 
@@ -14,9 +14,8 @@ def text2image_proxy(text: str, height: int = 1024, width: int = 1024) -> str:
         height: Image height in pixels, default is 1024.
         width: Image width in pixels, default is 1024.
     """
-    url = "http://172.30.162.209:43141/text2image"
     payload = {"text": text, "height": height, "width": width}
-    response = requests.post(url, json=payload)
+    response = requests.post("http://localhost:43141/text2image", json=payload)
     if response.status_code != 200:
         error_detail = (
             response.json().get("detail", response.text)
@@ -27,9 +26,7 @@ def text2image_proxy(text: str, height: int = 1024, width: int = 1024) -> str:
     return response.json()["result"]
 
 
-model = OpenAIModel(
-    model_id="qwen3:0.6b", api_base="http://localhost:11434/v1", api_key="ollama"
-)
+model = OpenAIModel(model_id="qwen3:0.6b", api_base="http://localhost:11434/v1", api_key="ollama")
 agent = ToolCallingAgent(tools=[text2image_proxy], model=model)
 
 
