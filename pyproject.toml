@@ -39,6 +39,8 @@ example =  [
     "torch",
     "smolagents[openai]>=1.22.0",
     "gradio>=6.5.1",
+    "fastmcp>=3.0.2",
+    "langchain-mcp-adapters>=0.2.1",
 ]
 
 [[tool.uv.index]]
