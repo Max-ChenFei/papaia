@@ -37,7 +37,7 @@ example =  [
     "toml>=0.10.2",
     "transformers>=5.0.0",
     "torch",
-    "smolagents[openai]>=1.22.0",
+    "smolagents[mcp,openai]>=1.22.0",
     "gradio>=6.5.1",
     "fastmcp>=3.0.2",
     "langchain-mcp-adapters>=0.2.1",

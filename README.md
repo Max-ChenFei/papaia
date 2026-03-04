@@ -51,8 +51,3 @@ For `unit tests`
 uv sync --group test
 uv run pytest
 ```
-
-For `examples`
-```bash
-uv run --group example path/to/agent.py
-```
