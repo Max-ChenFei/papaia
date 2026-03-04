@@ -1,5 +1,7 @@
 # decl
 
+[![Tests](https://github.com/Max-ChenFei/decl/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Max-ChenFei/decl/actions/workflows/test.yml)
+
 `decl` is a Python package to support the proposed programming mode for building tool-using AI agents in the paper.
 
 ## User-Facing Primitives
