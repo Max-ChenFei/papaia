@@ -39,7 +39,8 @@ def compile_and_run(file_path: Path, nodes_path: Path | None = None) -> None:
     save_remote_cache_config()
 
     try:
-        runpy.run_path(str(compiled_file_path))
+        runpy.run_path(str(compiled_file_path), run_name="__main__")
+   
     finally:
         for tool, executor in executors.items():
             executor.stop(tool)
