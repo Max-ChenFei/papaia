@@ -98,10 +98,40 @@ return response.json()["result"]""").body
     ast.fix_missing_locations(invoke)
 
     invoke_cls = deepcopy(cls)
-    for i, node in enumerate(invoke_cls.body):
-        if isinstance(node, ast.FunctionDef) and node.name == entry:
-            invoke_cls.body[i] = invoke
-            break
-
+    
+    # Filter class body to only keep __init__ (with only super().__init__() call) and the entry method
+    filtered_body = []
+    for node in invoke_cls.body:
+        if isinstance(node, ast.FunctionDef):
+            if node.name == entry:
+                # Replace entry method with the invoke stub
+                filtered_body.append(invoke)
+            elif node.name == "__init__":
+                # Filter __init__ body to only keep super().__init__() statements
+                filtered_init_body = []
+                for stmt in node.body:
+                    is_super_init = (
+                        isinstance(stmt, ast.Expr) and
+                        isinstance(stmt.value, ast.Call) and
+                        isinstance(stmt.value.func, ast.Attribute) and
+                        isinstance(stmt.value.func.value, ast.Call) and
+                        isinstance(stmt.value.func.value.func, ast.Name) and
+                        stmt.value.func.value.func.id == "super" and
+                        stmt.value.func.attr == "__init__"
+                    )
+                    if is_super_init:
+                        filtered_init_body.append(stmt)
+                
+                # Only keep __init__ if it has super().__init__() calls
+                if filtered_init_body:
+                    init_copy = deepcopy(node)
+                    init_copy.body = filtered_init_body
+                    ast.fix_missing_locations(init_copy)
+                    filtered_body.append(init_copy)
+        else:
+            # Keep non-method nodes (e.g., class variables, docstrings)
+            filtered_body.append(node)
+    
+    invoke_cls.body = filtered_body
     invoke_template = Template(ast.unparse(invoke_cls))
     return (pip_install, code, invoke_template)
