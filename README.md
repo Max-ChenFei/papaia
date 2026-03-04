@@ -54,5 +54,5 @@ uv run pytest
 
 For `examples`
 ```bash
-uv sync --group example
+uv run --group example path/to/agent.py
 ```
