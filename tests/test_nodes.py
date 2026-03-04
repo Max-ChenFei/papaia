@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from declagent.IR import available_nodes, Node
+from decl.IR import available_nodes, Node
 
 
 def test_get_valid_nodes_path():

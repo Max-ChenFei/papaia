@@ -7,12 +7,12 @@ from langchain.agents import create_agent
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
 
-from declagent import assigned_accel_devices, required_cls
+from decl import assigned_accel_devices, required_cls
 
 
 @required_cls(entry="_run", accel="RTX 8000", pip_install=[
         "torch --index-url https://download.pytorch.org/whl/cu124",
-        "git+https://github.com/Max-ChenFei/declagent.git",
+        "git+https://github.com/Max-ChenFei/decl.git",
         "transformers",
         "Pillow",
         "requests",

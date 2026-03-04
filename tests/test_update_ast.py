@@ -1,7 +1,7 @@
 import ast
 
 from ast_eq import ast_eq
-from declagent.utils import update_ast
+from decl.utils import update_ast
 
 
 def test_update_ast():

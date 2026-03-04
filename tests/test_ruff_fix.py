@@ -2,7 +2,7 @@ import tempfile
 import pytest
 from pathlib import Path
 
-from declagent.utils import ruff_fix
+from decl.utils import ruff_fix
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ from typing import List, Any, Dict
 from langchain.tools import BaseTool
 from langchain_ollama import ChatOllama
 from langchain.agents import create_agent
-from declagent import required_cls
+from decl import required_cls
 
 
 class Grounding(BaseTool):

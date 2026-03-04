@@ -6,7 +6,7 @@ import asyncio
 
 from .IR.nodes import Node
 
-CACHE_DIR: str = ".declagent_cache"
+CACHE_DIR: str = ".decl_cache"
 
 LOCAL_CACHE_DIR: Path = Path(CACHE_DIR).resolve()
 REMOTE_CACHE_DIR: str = f"/tmp/{CACHE_DIR}"

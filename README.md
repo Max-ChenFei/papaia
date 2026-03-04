@@ -1,6 +1,6 @@
-# declagent
+# decl
 
-`declagent` is a Python package to support the proposed programming mode for building tool-using AI agents in the paper.
+`decl` is a Python package to support the proposed programming mode for building tool-using AI agents in the paper.
 
 ## User-Facing Primitives
 
@@ -24,10 +24,10 @@ This API allows a tool to query the accelerator devices assigned to it at runtim
 
 ### Compiler Interface
 
-- `declagent run`  
+- `decl run`  
   Derives a feasible realization of the declared tools—including placement and invocation strategy—and executes the agent program.
 
-- `declagent clear`  
+- `decl clear`  
   Removes cached artifacts generated during compilation and execution, including provisioned virtual Python environments.
 
 ## Examples
@@ -36,5 +36,5 @@ The [`examples/`](./examples) directory contains self-contained example programs
 
 - declaring tools using `@required_fn` or `@required_cls`,
 - accessing assigned runtime resources via the runtime API, and
-- executing an agent program through the `declagent` compiler interface.
+- executing an agent program through the `decl` compiler interface.
 
