@@ -1,17 +1,32 @@
 import requests
-import torch
 import gradio as gr
-from diffusers import StableDiffusionXLPipeline
 from smolagents import Tool, OpenAIModel
 from smolagents import ToolCallingAgent
-from declagent import assigned_accel_devices
+import tempfile
+import torch
+from diffusers import StableDiffusionXLPipeline
+
+from decl import assigned_accel_devices, required_cls
 
 
+@required_cls(
+    entry="forward",
+    accel="RTX 8000",
+    pip_install=[
+        "torch --index-url https://download.pytorch.org/whl/cu124",
+        "git+https://github.com/Max-ChenFei/decl.git",
+        "transformers",
+        "diffusers",
+        "Pillow",
+        "requests",
+    ],
+)
 class Text2Image(Tool):
     name = "text2image"
     description = (
         "Generate images from text descriptions and return URL of generated image."
     )
+
     inputs = {
         "text": {"type": "string", "description": "text prompt"},
         "height": {
@@ -31,32 +46,20 @@ class Text2Image(Tool):
 
     def __init__(self):
         super().__init__()
-        self._pipe = None
+        pipe = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+        self._pipe = pipe.to(f"cuda:{assigned_accel_devices('Text2Image')}")
 
-    def _get_pipe(self):
-        if self._pipe is None:
-            device = f"cuda:{assigned_accel_devices('Text2Image')}"
-            pipe = StableDiffusionXLPipeline.from_pretrained(
-                "stabilityai/stable-diffusion-xl-base-1.0",
-                torch_dtype=torch.float16,
-                variant="fp16",
-                use_safetensors=True,
-            )
-            self._pipe = pipe.to(device)
-        return self._pipe
 
     def forward(self, text: str, height: int = 1024, width: int = 1024) -> str:
-        url = "http://172.30.162.209:41519/text2image"
-        payload = {"text": text, "height": height, "width": width}
-        response = requests.post(url, json=payload)
-        if response.status_code != 200:
-            error_detail = (
-                response.json().get("detail", response.text)
-                if response.headers.get("content-type") == "application/json"
-                else response.text
-            )
-            raise Exception(f"Server error ({response.status_code}): {error_detail}")
-        return response.json()["result"]
+        image = self._pipe(text, height=height, width=width).images[0]
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            image.save(tmp.name)
+            with open(tmp.name, "rb") as f:
+                res = requests.post(
+                    "https://tmpfile.link/api/upload", files={"file": f}
+                )
+            res.raise_for_status()
+        return res.json()["downloadLink"]
 
 
 model = OpenAIModel(
@@ -89,5 +92,6 @@ demo = gr.ChatInterface(
         "Small silhouette of a climber on an enormous black cliff, endless vertical wall, minimal composition",
     ],
 )
+
 if __name__ == "__main__":
     demo.launch(share=False)
