@@ -34,7 +34,7 @@ This API allows a tool to query the accelerator devices assigned to it at runtim
 
 ## Examples
 
-The [`examples/`](./examples) directory contains self-contained example programs illustrating typical usage of the programming model. Each example demonstrates:
+The [`example/`](./example) directory contains self-contained example programs illustrating typical usage of the programming model. Each example demonstrates:
 
 - declaring tools using `@required_fn` or `@required_cls`,
 - accessing assigned runtime resources via the runtime API, and
