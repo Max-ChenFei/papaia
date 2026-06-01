@@ -2,9 +2,9 @@ import ast
 import requests
 from string import Template
 
-from decl.exec.executors.venv import VenvExecutor
-from decl.exec.executors.another_process import split_pip_install
-from decl.IR import Desc, Metadata
+from papaia.exec.executors.venv import VenvExecutor
+from papaia.exec.executors.another_process import split_pip_install
+from papaia.IR import Desc, Metadata
 
 
 def test_venv_executor():

@@ -1,4 +1,4 @@
-from decl import required_fn
+from papaia import required_fn
 from langchain.tools import tool
 from langchain.agents import create_agent
 

@@ -1,6 +1,6 @@
 import os
 
-from decl.accel_assign import (
+from papaia.accel_assign import (
     assign_accel_devices_code,
     assigned_accel_devices,
 )

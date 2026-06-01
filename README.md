@@ -1,8 +1,8 @@
-# decl
+# papaia
 
-[![Tests](https://github.com/Max-ChenFei/decl/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Max-ChenFei/decl/actions/workflows/test.yml)
+[![Tests](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml)
 
-`decl` is a Python package to support the proposed programming mode for building tool-using AI agents in the paper.
+`papaia` is a Python package to support the proposed programming mode for building tool-using AI agents in the paper.
 
 ## User-Facing Primitives
 
@@ -26,10 +26,10 @@ This API allows a tool to query the accelerator devices assigned to it at runtim
 
 ### Compiler Interface
 
-- `decl run`  
+- `papaia run`  
   Derives a feasible realization of the declared tools—including placement and invocation strategy—and executes the agent program.
 
-- `decl clear`  
+- `papaia clear`  
   Removes cached artifacts generated during compilation and execution, including provisioned virtual Python environments.
 
 ## Examples
@@ -38,10 +38,10 @@ The [`example/`](./example) directory contains self-contained example programs i
 
 - declaring tools using `@required_fn` or `@required_cls`,
 - accessing assigned runtime resources via the runtime API, and
-- executing an agent program through the `decl` compiler interface.
+- executing an agent program through the `papaia` compiler interface.
 
 ## Development
-For `decl`  
+For `papaia`  
 ```bash
 uv sync
 ```

@@ -1,0 +1,5 @@
+[nodes.local]
+location = "local"
+cpus = 8
+memory = 32
+accel = "RTX 8000:1"

@@ -1,8 +1,8 @@
 import ast
 
 from ast_eq import ast_eq
-from decl.IR.desc import split_decorator, extract_desc
-from decl.IR.metadata import extract_metadata
+from papaia.IR.desc import split_decorator, extract_desc
+from papaia.IR.metadata import extract_metadata
 
 
 def test_extract_fn_metadata():
@@ -108,7 +108,7 @@ def test_extract_desc_from_def_imports():
 import requests
 from PIL import Image
 from typing import List
-from decl import required_fn
+from papaia import required_fn
 
 @required_fn(pip_install="path/requirements.txt", accel="A100:2")
 def my_function():

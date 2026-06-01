@@ -1,9 +1,8 @@
 import ast
 import pytest
 
-from decl.IR import Node
-from decl.exec.place import assignment
-from decl.IR import Desc, Metadata, Resources
+from papaia.IR import Node, Desc, Metadata, Resources
+from papaia.exec.place import assignment
 
 
 @pytest.fixture

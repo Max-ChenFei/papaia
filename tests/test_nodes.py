@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from decl.IR import available_nodes, Node
+from papaia.IR import available_nodes, Node
 
 
 def test_get_valid_nodes_path():

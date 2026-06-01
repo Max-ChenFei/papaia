@@ -1,7 +1,7 @@
 import ast
 
 from ast_eq import ast_eq
-from decl.utils import update_ast
+from papaia.utils import update_ast
 
 
 def test_update_ast():

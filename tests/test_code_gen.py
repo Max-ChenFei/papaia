@@ -1,7 +1,7 @@
 import ast
 
 from ast_eq import ast_eq
-from decl.exec.code_gen import func2fastapi, cls2fastapi
+from papaia.exec.code_gen import func2fastapi, cls2fastapi
 
 
 def test_func2fastapi():

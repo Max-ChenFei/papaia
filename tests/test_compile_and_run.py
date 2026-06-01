@@ -2,13 +2,13 @@ import os
 from pathlib import Path
 import tempfile
 
-from decl import compile_and_run
+from papaia import compile_and_run
 
 
 def test_local_inprocess(mocker, capsys):
     original_dir = os.getcwd()
 
-    src = '''from decl import required_fn
+    src = '''from papaia import required_fn
 
 @required_fn(accel="A100:1")
 def get_weather(city: str) -> str:
@@ -42,7 +42,7 @@ print(get_weather("San Francisco"))
 def test_venv_executor(capsys):
     original_dir = os.getcwd()
 
-    src = '''from decl import required_fn
+    src = '''from papaia import required_fn
 import requests
 
 @required_fn(pip_install=["requests"])
