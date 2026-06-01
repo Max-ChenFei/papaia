@@ -1,8 +1,20 @@
-# papaia
 
-[![Tests](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml)
 
-`papaia` is a Python package to support the proposed programming mode for building tool-using AI agents in the paper.
+<h1 align="center">papaia</h1>
+
+<p align="center">
+<a href="https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml"><img src="https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml/badge.svg?branch=main" alt="unit tests"></a>
+<a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+</p>
+
+<p align="center">
+<em>A Python package for simplifying the integration of tools into AI agents.</em>
+</p>
+
+As agents integrate a broader mix of tools, ranging from compute-light utilities (e.g., web search) to tools backed by compute-intensive model inference (e.g., diffusion-based models), the runtime requirements of these tools vary in both computational demand and package dependencies. In conventional implementations, developers manually place each tool by deciding whether it remains in process or is externalized to a separate process or remote node, in order to satisfy compute constraints and avoid dependency conflicts, thereby triggering a domino effect of heterogeneous implementations, transport-coupled invocation, and duplicated interface definitions. 
+
+
+With Papaia Python package, developers declare compute resources and tools' runtime requirements; the compiler generates the corresponding placement-specific artifacts.
 
 ## User-Facing Primitives
 
