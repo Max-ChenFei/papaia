@@ -1,9 +1,10 @@
 [project]
 name = "papaia"
 version = "0.1.0"
-description = "Add your description here"
+description = "Placement-agnostic tool integration for AI agents"
 readme = "README.md"
 authors = [
+    { name = "Fei Chen", email = "boxchenfei@gmail.com" }
 ]
 requires-python = ">=3.11,<3.14"
 dependencies = [
