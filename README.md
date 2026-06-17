@@ -44,9 +44,9 @@ This API allows a tool to query the accelerator devices assigned to it at runtim
 - `papaia clear`  
   Removes cached artifacts generated during compilation and execution, including provisioned virtual Python environments.
 
-## Examples
+## Use Cases
 
-The [`example/`](./example) directory contains self-contained example programs illustrating typical usage of the programming model. Each example demonstrates:
+The [`use_cases/`](./use_cases) directory contains self-contained example programs illustrating typical usage of the programming model. Each example demonstrates:
 
 - declaring tools using `@required_fn` or `@required_cls`,
 - accessing assigned runtime resources via the runtime API, and
