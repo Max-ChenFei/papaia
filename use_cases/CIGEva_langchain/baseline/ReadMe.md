@@ -1,4 +1,7 @@
-# Terminal Commands for Running the Agent
+> See [`../ReadMe.md`](../ReadMe.md) for prerequisites and environment setup.
+
+# baseline
+
 ## Run the server
 ```bash
 scp -r grounding user@172.30.162.209:~/ # copy the grounding folder to the remote node
@@ -12,5 +15,5 @@ uvicorn server:app --port 52273 # run the service
 
 ## Run the agent
 ```bash
-python path/to/agent.py
+uv run --group cigeva python agent.py
 ```

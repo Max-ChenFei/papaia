@@ -13,8 +13,8 @@ from papaia import assigned_accel_devices, required_cls
 
 @required_cls(entry="_run", accel="RTX 8000", pip_install=[
         "torch --index-url https://download.pytorch.org/whl/cu124",
-        "git+https://github.com/anonymizedsubmission1024/papaia.git",
-        "transformers",
+        "git+https://github.com/Max-ChenFei/papaia.git",
+        "transformers<5",
         "Pillow",
         "requests",
     ],

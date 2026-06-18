@@ -26,22 +26,24 @@ test = [
     "pytest>=9.0.2",
     "pytest-mock>=3.14.0",
 ]
-example =  [
-    "accelerate>=1.12.0",
-    "diffusers>=0.36.0",
-    "ipywidgets>=8.1.8",
+cigeva = [
     "langchain>=1.2.7",
     "langchain-ollama>=1.0.1",
-    "matplotlib>=3.10.8",
+    "langchain-mcp-adapters>=0.2.1",
+    "fastmcp>=3.0.2",
+    "transformers>=5.0.0",
     "pillow>=12.1.0",
     "papaia",
-    "toml>=0.10.2",
-    "transformers>=5.0.0",
-    "torch",
+]
+genartist = [
     "smolagents[mcp,openai]>=1.22.0",
     "gradio>=6.5.1",
-    "fastmcp>=3.0.2",
-    "langchain-mcp-adapters>=0.2.1",
+    "torch",
+    "diffusers>=0.36.0",
+    "accelerate>=1.12.0",
+    "transformers>=5.0.0",
+    "pillow>=12.1.0",
+    "papaia",
 ]
 
 [[tool.uv.index]]

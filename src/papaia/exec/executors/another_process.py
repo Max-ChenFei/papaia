@@ -74,7 +74,7 @@ if __name__ == "__main__":
         desc.append_pip_install(["uvicorn"])
         return main_file
 
-    def _wait_for_server(self, base_url: str, timeout: int = 100) -> None:
+    def _wait_for_server(self, base_url: str, timeout: int = 600) -> None:
         """Wait for the server to be ready."""
 
         start_time = time.time()

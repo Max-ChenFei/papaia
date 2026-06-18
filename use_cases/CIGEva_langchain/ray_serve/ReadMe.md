@@ -1,4 +1,6 @@
-# Terminal Commands for Running the Agent
+> See [`../ReadMe.md`](../ReadMe.md) for prerequisites and environment setup.
+
+# ray_serve
 
 ## install ray and start the ray head
 ```bash
@@ -20,5 +22,5 @@ serve start --http-host 0.0.0.0 --http-port 52273 && serve run ray_serve:deploym
 
 ## Run the agent
 ```bash
-python path/to/agent.py
+uv run --group cigeva python agent.py
 ```
