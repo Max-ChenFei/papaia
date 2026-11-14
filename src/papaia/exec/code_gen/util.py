@@ -1,5 +1,7 @@
 import ast
 
+from ...utils import check_tool_params
+
 
 def _ann_to_str(node: ast.AST | None) -> str:
     if node is None:
@@ -21,7 +23,7 @@ def extract_fields_and_call_args(
     fn: ast.FunctionDef,
     is_class_method: bool = False,
 ) -> tuple[list[str], list[str], str, bool]:
-    # Positional-or-keyword args (common case)
+    check_tool_params(fn, fn.name)
     args = fn.args.args
 
     # Skip 'self' or 'cls' for class methods

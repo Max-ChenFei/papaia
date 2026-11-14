@@ -1,3 +1,20 @@
+# Set by `papaia run` while the compiled program runs. The compiler removes
+# these decorators from the tools it compiles, so a decorator that still
+# executes belongs to a tool Papaia did not compile (e.g., one imported from
+# another module or defined inside a function).
+_running_compiled = False
+
+
+def _check_compiled(obj):
+    if _running_compiled:
+        raise RuntimeError(
+            f"Tool '{obj.__qualname__}' (module '{obj.__module__}') was not "
+            "compiled by Papaia: only tools defined at the top level of the "
+            "file passed to `papaia run` are compiled. Move the tool there."
+        )
+    return obj
+
+
 def required_fn(
     pip_install: str | list[str] | None = None,
     cpus: int | None = None,
@@ -20,7 +37,7 @@ def required_fn(
     """
 
     def decorator(func):
-        return func
+        return _check_compiled(func)
 
     return decorator
 
@@ -53,7 +70,7 @@ def required_cls(
     """
 
     def decorator(cls):
-        return cls
+        return _check_compiled(cls)
 
     return decorator
 

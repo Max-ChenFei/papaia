@@ -2,8 +2,10 @@ import asyncio
 import runpy
 from pathlib import Path
 
+from . import decorators
 from .IR import extract_desc
 from .exec import place_on_exec_sites
+from .exec.executors import stop_all
 from .cache import save_remote_cache_config
 from .utils import read_ast, update_ast, write_ast, delete_file, ruff_fix
 
@@ -29,19 +31,26 @@ def compile_and_run(file_path: Path, nodes_path: Path | None = None) -> None:
     raw_ast = read_ast(file_path)
     desc = extract_desc(raw_ast)
 
-    stub_ast, executors = asyncio.run(
-        place_on_exec_sites(desc, get_valid_nodes_path(nodes_path))
-    )
+    try:
+        stub_ast, executors = asyncio.run(
+            place_on_exec_sites(desc, get_valid_nodes_path(nodes_path))
+        )
+    except BaseException:
+        # A tool failed to deploy (e.g., a package failed to install): stop the
+        # services already started for other tools, then report the error.
+        stop_all()
+        raise
     new_ast = update_ast(raw_ast, stub_ast)
     compiled_file_path = file_path.with_name(file_path.stem + "_compiled.py")
     write_ast(new_ast, compiled_file_path)
     ruff_fix(compiled_file_path)
     save_remote_cache_config()
 
+    decorators._running_compiled = True
     try:
         runpy.run_path(str(compiled_file_path), run_name="__main__")
-   
     finally:
+        decorators._running_compiled = False
         for tool, executor in executors.items():
             executor.stop(tool)
 

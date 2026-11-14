@@ -1,0 +1,11 @@
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-client netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /papaia
+COPY pyproject.toml README.md LICENSE ./
+COPY src ./src
+RUN pip install --no-cache-dir . langchain langchain-ollama
+WORKDIR /demo
+COPY use_cases/weather_demo_docker/agent.py use_cases/weather_demo_docker/*.toml \
+     use_cases/weather_demo_docker/agent-entrypoint.sh ./
+ENTRYPOINT ["sh", "/demo/agent-entrypoint.sh"]

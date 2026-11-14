@@ -38,7 +38,7 @@ Decorate each tool class with `@required_cls` to declare its execution requireme
     pip_install=[           # packages installed in the tool's isolated venv
         "torch --index-url https://download.pytorch.org/whl/cu124",
         "git+https://github.com/Max-ChenFei/papaia.git",
-        "transformers",
+        "transformers<5",
         "Pillow",
         "requests",
     ],
@@ -49,8 +49,7 @@ class Grounding(BaseTool):
 
 ## Step 3: Run the agent
 ```bash
-uv run --group cigeva
-papaia run agent.py -c exec_nodes_remote.toml
+uv run --group cigeva papaia run agent.py -c exec_nodes_remote.toml
 ```
 
 Expected output:

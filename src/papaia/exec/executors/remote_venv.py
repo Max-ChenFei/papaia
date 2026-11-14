@@ -1,9 +1,15 @@
 import sys
 import asyncio
+import threading
 import asyncssh
 from pathlib import Path
 
-from .another_process import AnotherProcess, split_pip_install
+from .another_process import (
+    AnotherProcess,
+    split_pip_install,
+    write_lock_file,
+    output_tail,
+)
 from ...IR import Desc, Node
 from ...cache import add_remote_cache, REMOTE_CACHE_DIR
 
@@ -19,6 +25,8 @@ class RemoteVenv(AnotherProcess):
         super().stop(name)
         if name in self._processes:
             proc_info = self._processes[name]
+            if proc_info.get("tunnel") is not None:
+                proc_info["tunnel"].close()
             asyncio.run(self._stop_remote(proc_info))
             del self._processes[name]
 
@@ -29,12 +37,16 @@ class RemoteVenv(AnotherProcess):
         async with asyncssh.connect(
             host=node.host, port=node.port, username=node.username
         ) as conn:
-            cmd = f"pkill -f '{remote_dir}/main.py'"
-            try:
-                await conn.run(cmd)
+            # Kill the server by the PID recorded at startup.
+            cmd = f"kill $(cat {remote_dir}/server.pid)"
+            result = await conn.run(cmd, check=False)
+            if result.exit_status == 0:
                 _print_flush(f"Stopped remote server at {remote_dir}")
-            except Exception as e:
-                _print_flush(f"Error stopping remote server: {e}")
+            else:
+                _print_flush(
+                    f"Error stopping remote server at {remote_dir}: "
+                    f"{(result.stderr or result.stdout).strip()}"
+                )
 
     def _deploy(self, node: Node, desc: Desc, generate_code: str) -> str:
         desc_dir = self._desc_dir(desc)
@@ -108,7 +120,10 @@ class RemoteVenv(AnotherProcess):
                         _print_flush(f"    ✗ Failed to install {pkg}")
                         _print_flush(f"    stdout: {r2.stdout}")
                         _print_flush(f"    stderr: {r2.stderr}")
-                        raise Exception(f"Failed to install {pkg}")
+                        raise RuntimeError(
+                            f"pip install {pkg} failed for tool '{desc.ast_node.name}' "
+                            f"on {node.host}:\n{output_tail(r2.stderr or r2.stdout)}"
+                        )
 
                 # Install regular packages from requirements.txt
                 _print_flush(f"Installing packages from requirements.txt...")
@@ -122,9 +137,15 @@ class RemoteVenv(AnotherProcess):
                 if r3.exit_status == 0:
                     _print_flush(f"✓ Installed all requirements")
                 else:
-                    _print_flush(f"✗ Failed to install requirements")
-                    _print_flush(f"  stdout: {r3.stdout}")
-                    _print_flush(f"  stderr: {r3.stderr}")
+                    raise RuntimeError(
+                        f"pip install failed for tool '{desc.ast_node.name}' on "
+                        f"{node.host} (exit code {r3.exit_status}):\n"
+                        f"{output_tail(r3.stderr or r3.stdout)}"
+                    )
+                freeze = await conn.run(
+                    f"{remote_dir}/.venv/bin/pip freeze", check=True
+                )
+                write_lock_file(desc_dir, freeze.stdout, special_installs)
 
                 # Run the server in background
                 _print_flush("Starting server...")
@@ -144,56 +165,33 @@ class RemoteVenv(AnotherProcess):
 
                 sys.stdout.flush()
 
-                base_url = f"http://{node.host}:{port}"
-
-                # Wait for server to be ready on the remote machine first
-                _print_flush("  Waiting for server to start...")
-
-                # todo: better logging here
-                # Check server logs for any startup issues
-                log_result = await conn.run(
-                    f"cat {remote_dir}/server.log 2>&1", check=False
-                )
-                if log_result.stdout:
-                    _print_flush(f"  Server startup logs:\n{log_result.stdout}")
-
-                # Now try to connect from local machine (may fail due to firewall)
-                _print_flush(
-                    f"  Testing connectivity from local machine to {base_url}..."
-                )
-
-                try:
-                    self._wait_for_server(base_url)
-                    _print_flush(
-                        f"  ✓ Server is accessible from local machine at {base_url}"
-                    )
-                except TimeoutError as e:
-                    # Show more logs if connection fails
-                    _print_flush(f"  ✗ Connection timeout: {e}")
-                    log_result2 = await conn.run(
-                        f"cat {remote_dir}/server.log 2>&1 | tail -100", check=False
-                    )
-                    if log_result2.stdout:
-                        _print_flush(f"  Recent server logs:\n{log_result2.stdout}")
-                    if log_result2.stdout:
-                        _print_flush(f"  Recent server logs:\n{log_result2.stdout}")
-                    _print_flush(
-                        "  ⚠ Warning: Cannot connect from local machine (firewall/network issue)"
-                    )
-                    _print_flush(
-                        "  ⚠ Server is running on remote machine but not accessible externally"
-                    )
-                    _print_flush(
-                        "  ⚠ You may need to configure firewall or use SSH tunneling"
-                    )
-                    sys.stdout.flush()
-                    # Don't fail - server is running, just not accessible from local machine
-
+                # Register now so the server is stopped even if a later step fails.
                 self._processes[desc.ast_node.name] = {
                     "node": node,
                     "remote_dir": remote_dir,
-                    "base_url": base_url,
+                    "tunnel": None,
                 }
+
+                # The service listens on the remote loopback interface only; the agent
+                # reaches it through an SSH port forward, so it is not exposed on the
+                # network and traffic is encrypted and authenticated by SSH.
+                tunnel = SSHTunnel(node, port)
+                self._processes[desc.ast_node.name]["tunnel"] = tunnel
+                base_url = f"http://127.0.0.1:{tunnel.local_port}"
+
+                _print_flush("  Waiting for server to start...")
+                try:
+                    self._wait_for_server(base_url)
+                except TimeoutError as e:
+                    log = await conn.run(
+                        f"tail -100 {remote_dir}/server.log", check=False
+                    )
+                    raise TimeoutError(
+                        f"Tool '{desc.ast_node.name}' did not start on {node.host}: "
+                        f"{e}\nRecent server log:\n{log.stdout}"
+                    ) from e
+                _print_flush(f"  ✓ Server reachable via SSH tunnel at {base_url}")
+                self._processes[desc.ast_node.name]["base_url"] = base_url
                 return base_url
         except asyncssh.ProcessError as e:
             _print_flush(f"\n[ERROR] Command failed with exit status {e.exit_status}")
@@ -209,3 +207,49 @@ def _print_flush(msg):
     """Print with immediate flush to ensure output appears in notebooks."""
     print(msg, flush=True)
     sys.stdout.flush()
+
+
+class SSHTunnel:
+    """Local port forward 127.0.0.1:<local_port> -> remote 127.0.0.1:<remote_port> over SSH.
+
+    Runs on its own event loop thread so it stays open while the agent program runs.
+    """
+
+    def __init__(self, node, remote_port: int, timeout: float = 30):
+        self._loop = asyncio.new_event_loop()
+        self._thread = threading.Thread(target=self._loop.run_forever, daemon=True)
+        self._thread.start()
+        self._conn = None
+        try:
+            self.local_port = asyncio.run_coroutine_threadsafe(
+                self._open(node, remote_port), self._loop
+            ).result(timeout)
+        except Exception:
+            self.close()
+            raise
+
+    async def _open(self, node, remote_port: int) -> int:
+        self._conn = await asyncssh.connect(
+            host=node.host, port=node.port, username=node.username
+        )
+        listener = await self._conn.forward_local_port(
+            "127.0.0.1", 0, "127.0.0.1", remote_port
+        )
+        return listener.get_port()
+
+    async def _close(self) -> None:
+        if self._conn is not None:
+            self._conn.close()
+            await self._conn.wait_closed()
+
+    def close(self) -> None:
+        if self._loop.is_closed():
+            return
+        try:
+            asyncio.run_coroutine_threadsafe(self._close(), self._loop).result(10)
+        except Exception:
+            pass
+        self._loop.call_soon_threadsafe(self._loop.stop)
+        self._thread.join(timeout=5)
+        if not self._thread.is_alive():
+            self._loop.close()

@@ -1,0 +1,7 @@
+# A second "machine": SSH plus Python, nothing papaia-specific.
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -s /bin/bash papaia && mkdir -p /run/sshd
+COPY use_cases/weather_demo_docker/node-entrypoint.sh /node-entrypoint.sh
+ENTRYPOINT ["sh", "/node-entrypoint.sh"]

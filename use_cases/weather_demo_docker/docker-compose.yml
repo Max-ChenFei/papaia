@@ -1,0 +1,30 @@
+# Two simulated machines on one laptop (no GPU needed):
+#   agent    - runs `papaia run` and the LangChain agent
+#   gpu-node - a plain SSH + Python node that declares 2 (dummy) GPUs
+# plus an Ollama server for the LLM (qwen3:0.6b on CPU; no API key).
+services:
+  agent:
+    build: {context: ../.., dockerfile: use_cases/weather_demo_docker/Dockerfile.agent}
+    hostname: agent
+    command: ["papaia", "run", "agent.py", "-c", "${NODES:-exec_nodes_remote.toml}"]
+    environment: {OLLAMA_URL: "http://ollama:11434", MODEL: "${MODEL:-qwen3:0.6b}"}
+    volumes: [keys:/keys]
+    depends_on:
+      gpu-node: {condition: service_started}
+      ollama-pull: {condition: service_completed_successfully}
+  gpu-node:
+    build: {context: ../.., dockerfile: use_cases/weather_demo_docker/Dockerfile.node}
+    hostname: gpu-node
+    volumes: [keys:/keys]
+  ollama:
+    image: ollama/ollama:0.12.6
+    volumes: [ollama:/root/.ollama]
+  ollama-pull:
+    image: ollama/ollama:0.12.6
+    environment: {OLLAMA_HOST: "ollama:11434"}
+    entrypoint: ["sh", "-c", "until ollama list >/dev/null 2>&1; do sleep 1; done; ollama pull ${MODEL:-qwen3:0.6b}"]
+    volumes: [ollama:/root/.ollama]
+    depends_on: [ollama]
+volumes:
+  keys:
+  ollama:

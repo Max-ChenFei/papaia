@@ -29,7 +29,7 @@ pip install papaia
 
 ## Quick Start
 
-Declare the execution nodes available for running tools in an `exec_nodes.toml` file:
+Declare the execution nodes available for running tools in a compute-resource declaration (`exec_nodes.toml`):
 
 ```toml
 # exec_nodes.toml
@@ -39,17 +39,18 @@ cpus = 8
 memory = 32
 ```
 
-Declare each tool's runtime requirements with a decorator and build your agent in ordinary Python (`agent.py`):
+Declare each tool's runtime requirements with a decorator and write your program in ordinary Python (`agent.py`):
 
 ```python
 from papaia import required_fn
 
 @required_fn(pip_install=["sympy"])
 def factor(expression: str) -> str:
+    """Factor a polynomial expression."""
     import sympy
     return str(sympy.factor(expression))
 
-# ... register `factor` with your agent and run it ...
+print(factor("x**2 - 1"))  # in an agent, register `factor` as a tool instead
 ```
 
 Compile, place, deploy, and run the program with a single command:
@@ -58,7 +59,24 @@ Compile, place, deploy, and run the program with a single command:
 papaia run agent.py -c exec_nodes.toml
 ```
 
-For complete, runnable agents—covering remote GPU tools, accelerator assignment, and class-based tools—see the [`use_cases/`](./use_cases) directory.
+This runs on a laptop without a GPU or a remote node: `factor` runs in its own virtual environment with `sympy` installed, so `sympy` is not needed in the agent's environment, and the program prints `(x - 1)*(x + 1)`.
+
+## Examples
+
+| Example | Framework | Needs |
+|---|---|---|
+| [`weather_demo_docker`](./use_cases/weather_demo_docker) | LangChain | Docker and internet access: simulates a local and a remote GPU node; no GPU, no API key |
+| [`adk_function_tool`](./use_cases/adk_function_tool) | Google ADK | Nothing extra: shows the tool declaration ADK builds and calls the tool through ADK; no API key |
+| [`CIGEva_langchain`](./use_cases/CIGEva_langchain) | LangChain | GPU (local or remote), Ollama |
+| [`GenArtist_smalagent`](./use_cases/GenArtist_smalagent) | smolagents | GPU (local or remote), Ollama |
+
+The CIGEval and GenArtist examples also contain baseline, Ray Serve, and MCP versions of the same agent for comparison.
+
+**Agent frameworks.** Papaia does not depend on an agent framework. A tool is an ordinary Python function or class, and the agent-side stub keeps its name, signature, type hints, docstring, and base classes, so a framework builds the same tool schema from it. The examples cover LangChain (`create_agent` with function and `BaseTool` tools), smolagents (`Tool` classes), and Google ADK (function tools).
+
+## Testing and Support
+
+Unit tests run with `uv sync --group test && uv run pytest` and on every push to `main` and every pull request via [GitHub Actions](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml). Please report bugs and ask questions in [GitHub Issues](https://github.com/Max-ChenFei/papaia/issues). Papaia is maintained by the authors; releases are archived on Zenodo, and the maintainers answer issues and pull requests.
 
 ## Documentation
 

@@ -1,0 +1,7 @@
+.git
+.venv
+.papaia_cache
+.pytest_cache
+dist
+**/__pycache__
+**/.papaia_cache

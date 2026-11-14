@@ -120,6 +120,42 @@ class Grounding:
         return predict(self.ai_model, image_url, target_entity)
 ```
 
+### Restrictions
+
+Papaia reports the following cases as errors instead of silently running the
+tool in the wrong place. The checks apply to every tool, including in-process
+ones, so that a tool stays movable when its placement changes:
+
+- **Where tools are defined.** Only tools defined at the top level of the file
+  passed to `papaia run` are compiled. Under `papaia run`, a decorated tool
+  imported from another module or defined inside a function raises an error
+  (best effort: a module that was already imported before the run is not
+  re-executed and is therefore not detected).
+- **Decorator arguments** must be literals passed by keyword (e.g.,
+  `accel="A100:1"`), since the compiler reads them from the source without
+  running it. `@required_fn`, `@papaia.required_fn`, and import aliases are
+  recognized.
+- **Parameters** must be positional-or-keyword; `*args`, `**kwargs`,
+  keyword-only, and positional-only parameters are rejected at compile time.
+
+Further restrictions apply when a tool runs out of process (in a local or
+remote virtual environment). Respect them for in-process tools as well if the
+tool may be moved:
+
+- **Arguments and results** are sent as JSON. Values must be JSON-serializable
+  (strings, numbers, booleans, `None`, lists, and dicts), and type annotations
+  must be types that Pydantic can validate. Pass large data such as images by
+  path or URL. A non-serializable argument raises an exception in the agent;
+  tuples arrive as lists and non-string dict keys as strings.
+- **Code available to the service.** The generated service contains the tool
+  and the file's import statements, which must resolve in the tool's
+  environment (i.e., to packages installed via `pip_install`); local modules
+  next to the agent program and other module-level functions or variables of
+  the file are not copied.
+- **Class tools** are instantiated without arguments in the service, and
+  their base classes (e.g., LangChain's `BaseTool`) are removed there, so the
+  entry, setup, and teardown methods must not rely on inherited behavior.
+
 ---
 
 ## 3. Runtime Accelerator Query — `assigned_accel_devices`
@@ -141,6 +177,17 @@ def assigned_accel_devices(name: str) -> str | None
 `"0,1"`), or `None` if no accelerator was assigned to that tool.
 
 **Raises:** `ValueError` if `name` is an empty string.
+
+For device-agnostic tool code, `assigned_device(name, default="cpu")` returns a
+framework device string for the first assigned accelerator (e.g. `"cuda:1"`),
+or `default` when none is assigned, so the same tool code runs on nodes with
+or without accelerators:
+
+```python
+from papaia import assigned_device
+
+model.to(assigned_device("Grounding"))  # "cuda:<i>" on a GPU node, "cpu" otherwise
+```
 
 > Indices are communicated via the `TOOL_ACCEL_INDEXES__<name>` environment
 > variable so that the assignment is visible across processes.

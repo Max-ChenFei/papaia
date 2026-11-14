@@ -6,7 +6,7 @@ import tempfile
 import torch
 from diffusers import StableDiffusionXLPipeline
 
-from papaia import assigned_accel_devices, required_cls
+from papaia import assigned_device, required_cls
 
 
 @required_cls(
@@ -47,7 +47,7 @@ class Text2Image(Tool):
     def __init__(self):
         super().__init__()
         pipe = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
-        self._pipe = pipe.to(f"cuda:{assigned_accel_devices('Text2Image')}")
+        self._pipe = pipe.to(assigned_device("Text2Image"))
 
 
     def forward(self, text: str, height: int = 1024, width: int = 1024) -> str:

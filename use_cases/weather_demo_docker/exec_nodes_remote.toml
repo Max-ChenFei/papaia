@@ -1,0 +1,15 @@
+# Variant B: the agent machine has no GPU; `gpu-node` declares 2 GPUs
+# (declared only), so `get_weather` is placed on `gpu-node` over SSH.
+[nodes.local]
+location = "local"
+cpus = 4
+memory = 8
+
+[nodes.gpu_node]
+location = "remote"
+cpus = 8
+memory = 16
+accel = "A100:2"
+host = "gpu-node"
+port = 22
+username = "papaia"

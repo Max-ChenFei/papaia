@@ -6,7 +6,7 @@ import torch
 from diffusers import StableDiffusionXLPipeline
 
 
-mcp = FastMCP("MCP Server for Hosting Grounding Tool")
+mcp = FastMCP("MCP Server for Hosting Text2Image Tool")
 
 pipe = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
 pipe = pipe.to("cuda:0")

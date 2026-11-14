@@ -13,22 +13,49 @@ def is_class_def(node: ast.AST) -> bool:
 
 
 def split_decorator(
-    node: ast.AST, decorator_keywords: set[str]
+    node: ast.AST,
+    decorator_keywords: set[str],
+    module_names: set[str] = frozenset(),
+    attr_names: set[str] = frozenset(),
 ) -> tuple[Optional[ast.Call], list[ast.expr]]:
-    """Split out our decorator from the decorator list of a function or class definition node."""
+    """Split out our decorator from the decorator list of a function or class definition node.
+
+    Matches ``@name(...)`` with ``name`` in ``decorator_keywords`` (including
+    import aliases) and ``@mod.attr(...)`` with ``mod`` in ``module_names`` and
+    ``attr`` in ``attr_names``.
+    """
     if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
         return None, []
 
     for i, dec in enumerate(node.decorator_list):
-        # matches: @foo(...) where foo is a bare name
-        if isinstance(dec, ast.Call) and isinstance(dec.func, ast.Name):
-            if dec.func.id in decorator_keywords:
-                rest_decorators = [
-                    d for j, d in enumerate(node.decorator_list) if j != i
-                ]
-                return dec, rest_decorators
+        if not isinstance(dec, ast.Call):
+            continue
+        f = dec.func
+        is_ours = (isinstance(f, ast.Name) and f.id in decorator_keywords) or (
+            isinstance(f, ast.Attribute)
+            and isinstance(f.value, ast.Name)
+            and f.value.id in module_names
+            and f.attr in attr_names
+        )
+        if is_ours:
+            rest_decorators = [d for j, d in enumerate(node.decorator_list) if j != i]
+            return dec, rest_decorators
 
     return None, []
+
+
+def check_tool_params(fn: ast.FunctionDef, tool_name: str) -> None:
+    """Tool parameters must be positional-or-keyword so that the tool can run
+    out of process (arguments are sent as a JSON object)."""
+    unsupported = [a.arg for a in fn.args.posonlyargs + fn.args.kwonlyargs]
+    unsupported += [f"*{a.arg}" for a in (fn.args.vararg,) if a]
+    unsupported += [f"**{a.arg}" for a in (fn.args.kwarg,) if a]
+    if unsupported:
+        raise ValueError(
+            f"Tool '{tool_name}' may only use positional-or-keyword parameters, "
+            "so that it can run out of process; unsupported: "
+            + ", ".join(unsupported)
+        )
 
 
 def update_decorator_list(

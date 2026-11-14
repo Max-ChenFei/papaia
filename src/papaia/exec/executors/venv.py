@@ -5,7 +5,7 @@ from pathlib import Path
 from venv import create
 
 from ...IR import Desc, Node
-from .another_process import AnotherProcess, split_pip_install
+from .another_process import AnotherProcess, split_pip_install, write_lock_file, output_tail
 
 
 class VenvExecutor(AnotherProcess):
@@ -47,39 +47,13 @@ class VenvExecutor(AnotherProcess):
 
     def _pip_install(self, venv: Path, desc: Desc, desc_dir: Path) -> None:
         req_file, special_installs = split_pip_install(desc_dir, desc.pip_install)
-        self._pip_install_from_index(venv, special_installs)
-        self._pip_install_from_requirements(venv, req_file)
-
-    def _pip_install_from_index(
-        self, py: Path, special_installs: list[tuple[str, str]]
-    ) -> None:
-        """Install a specific package from a specific index."""
-        pip = py / "Scripts" / "pip" if sys.platform == "win32" else py / "bin" / "pip"
+        name = desc.ast_node.name
+        pip = venv / "Scripts" / "pip" if sys.platform == "win32" else venv / "bin" / "pip"
         for pkg, index_url in special_installs:
-            try:
-                print(f"Installing {pkg} from {index_url}")
-                subprocess.run(
-                    [str(pip), "install", pkg, "--index-url", index_url],
-                    check=True,
-                    # stdout=subprocess.DEVNULL,
-                    # stderr=subprocess.DEVNULL,
-                )
-
-            except subprocess.CalledProcessError as e:
-                print(f"Error installing {pkg}: {e}")
-
-    def _pip_install_from_requirements(self, py: Path, req_file: Path) -> None:
-        """Install packages from a requirements.txt file."""
-        pip = py / "Scripts" / "pip" if sys.platform == "win32" else py / "bin" / "pip"
-        try:
-            subprocess.run(
-                [str(pip), "install", "-r", str(req_file)],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except subprocess.CalledProcessError as e:
-            print(f"Error installing packages from {req_file}: {e}")
+            print(f"Installing {pkg} from {index_url}")
+            _run_pip(pip, ["install", pkg, "--index-url", index_url], name)
+        _run_pip(pip, ["install", "-r", str(req_file)], name)
+        write_lock_file(desc_dir, _run_pip(pip, ["freeze"], name), special_installs)
 
     def _py_run_background(self, py: Path, name, main_file: Path) -> None:
         python = (
@@ -110,3 +84,14 @@ def pick_free_port() -> int:
     port = s.getsockname()[1]
     s.close()
     return port
+
+
+def _run_pip(pip: Path, args: list[str], tool: str) -> str:
+    """Run pip; raise with pip's own error output if it fails, so `papaia run` stops early."""
+    r = subprocess.run([str(pip), *args], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(
+            f"pip {' '.join(args)} failed for tool '{tool}' "
+            f"(exit code {r.returncode}):\n{output_tail(r.stderr or r.stdout)}"
+        )
+    return r.stdout

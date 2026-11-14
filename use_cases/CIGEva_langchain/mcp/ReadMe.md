@@ -4,17 +4,16 @@
 
 ## Run the server
 ```bash
-scp -r grounding user@172.30.162.209:~/ # copy the grounding folder to the remote node
+scp mcp_server.py user@172.30.162.209:~/ # copy the server file to the remote node
 ssh user@172.30.162.209 # SSH login
-cd ~/grounding # including main.py and requirements.txt
 python3 -m venv .venv # create a Python environment
 source .venv/bin/activate
-python -m pip install -r requirements.txt # install dependencies
-fastmcp run server.py:mcp --transport http --port 52273 # run the service
-
+python -m pip install "transformers<5" torch Pillow requests fastmcp # install dependencies
+fastmcp run mcp_server.py:mcp --transport http --port 52273 # run the service
 ```
 
 ## Run the agent
 ```bash
+ssh -f -N -L 52273:localhost:52273 user@172.30.162.209 # forward the service port to this machine
 uv run --group cigeva python agent.py
 ```

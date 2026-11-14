@@ -45,10 +45,15 @@ async def place_on_exec_sites(
         )
         tasks.append((name, executor_instance, node, desc))
 
-    # Execute all tasks in parallel
+    # Execute all tasks in parallel; let every deployment finish (or fail) before
+    # raising, so the caller can stop all services that did start.
     results = await asyncio.gather(
-        *(executor.run(node, desc) for _, executor, node, desc in tasks)
+        *(executor.run(node, desc) for _, executor, node, desc in tasks),
+        return_exceptions=True,
     )
+    for result in results:
+        if isinstance(result, BaseException):
+            raise result
 
     # Collect results
     for (name, executor, _, _), result in zip(tasks, results):
@@ -102,7 +107,7 @@ def assignment(
         # Accelerator capacity (same type on node, so just total count)
         model.Add(
             sum(tasks[i].resources.accel_count * var for i, var in assigned_x)
-            <= nodes[j].accel_count
+            <= (nodes[j].accel_count or 0)  # nodes without accelerators declare none
         )
 
     # Constraint (4) Link x and y: if any task assigned to node j, then y[j] = 1

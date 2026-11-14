@@ -24,3 +24,13 @@ def add_executor(name: str, executor: Executor) -> None:
     if name in available_executors:
         raise ValueError(f"Executor '{name}' already exists.")
     available_executors[name] = executor
+
+
+def stop_all() -> None:
+    """Stop every service started by the built-in executors (used when deployment fails)."""
+    for executor in available_executors.values():
+        for name in list(getattr(executor, "_processes", {})):
+            try:
+                executor.stop(name)
+            except Exception as e:  # keep stopping the others
+                print(f"Error stopping tool '{name}': {e}", flush=True)

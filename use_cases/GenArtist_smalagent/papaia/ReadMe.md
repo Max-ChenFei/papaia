@@ -18,6 +18,14 @@ location = "local"
 cpus = 8
 memory = 32
 
+[nodes.vm1]
+location = "remote"
+cpus = 32
+memory = 128
+accel = "RTX 8000:1"
+host = "172.30.162.209"
+port = 22
+username = "user"
 
 [nodes.vm2]
 location = "remote"
@@ -40,7 +48,7 @@ Decorate each tool class with `@required_cls` to declare its execution requireme
     pip_install=[           # packages installed in the tool's isolated venv
         "torch --index-url https://download.pytorch.org/whl/cu124",
         "git+https://github.com/Max-ChenFei/papaia.git",
-        "transformers",
+        "transformers<5",
         "diffusers",
         "Pillow",
         "requests",
@@ -52,6 +60,5 @@ class Text2Image(Tool):
 
 ## Step 3: Run the agent
 ```bash
-uv run --group genartist 
-papaia run agent.py -c exec_nodes_remote.toml
+uv run --group genartist papaia run agent.py -c exec_nodes_remote.toml
 ```

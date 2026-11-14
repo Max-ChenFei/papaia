@@ -36,6 +36,7 @@ class AnotherProcess(Executor):
                 f"Unsupported AST node type: {type(desc.ast_node)}"
             )
 
+        code = code_str
         if desc.imports:
             code = merge(ast.parse(code_str), desc.imports)
         code = f"{assign_accel_devices_code(desc.ast_node.name, desc.assigned_accel_devices)}\n{code}"
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     import traceback
     try:
         print(f"Starting FastAPI server on port {port}...", flush=True)
-        uvicorn.run(app, host="0.0.0.0", port={port}, log_level="info")
+        uvicorn.run(app, host="127.0.0.1", port={port}, log_level="info")
     except Exception as e:
         print(f"FATAL ERROR starting server: {{e}}", file=sys.stderr, flush=True)
         traceback.print_exc(file=sys.stderr)
@@ -88,6 +89,31 @@ if __name__ == "__main__":
         raise TimeoutError(
             f"Server at {base_url} did not start within {timeout} seconds"
         )
+
+
+LOCK_FILENAME = "requirements.lock.txt"
+
+
+def write_lock_file(
+    dir: Path, freeze_output: str, special_installs: list[tuple[str, str]] = ()
+) -> Path:
+    """Record the exact package versions installed in a tool's environment.
+
+    The lock file can be passed back as ``pip_install="<path>"`` to reproduce the environment.
+    Package indexes used for special installs (e.g., PyTorch CUDA wheels) are kept as
+    ``--extra-index-url`` lines so the pinned versions can be resolved again.
+    """
+    lock_file = dir / LOCK_FILENAME
+    index_lines = "".join(
+        f"--extra-index-url {url}\n" for url in dict.fromkeys(u for _, u in special_installs)
+    )
+    lock_file.write_text(index_lines + freeze_output, encoding="utf-8")
+    print(f"Recorded resolved package versions in {lock_file}", flush=True)
+    return lock_file
+
+
+def output_tail(text: str | None, lines: int = 30) -> str:
+    return "\n".join((text or "").strip().splitlines()[-lines:])
 
 
 def split_pip_install(

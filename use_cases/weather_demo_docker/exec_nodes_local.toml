@@ -1,0 +1,7 @@
+# Variant A: the agent machine itself declares 2 GPUs (declared only),
+# so `get_weather` is placed locally, in its own virtual environment.
+[nodes.local]
+location = "local"
+cpus = 4
+memory = 8
+accel = "A100:2"

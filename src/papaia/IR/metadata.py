@@ -29,8 +29,19 @@ def extract_metadata(decorator: ast.Call, is_class_def: bool) -> Metadata | None
     metadata_kwargs = {}
     resource_kwargs = {}
 
+    if decorator.args:
+        raise ValueError(
+            "decorator arguments must be passed by keyword (e.g., accel=\"A100:1\")"
+        )
+
     for keyword in decorator.keywords:
-        value = ast.literal_eval(keyword.value)
+        try:
+            value = ast.literal_eval(keyword.value)
+        except ValueError:
+            raise ValueError(
+                f"decorator argument '{keyword.arg}' must be a literal "
+                f"(e.g., a string or number), not '{ast.unparse(keyword.value)}'"
+            ) from None
         if keyword.arg in RESOURCE_FIELDS or keyword.arg == "accel":
             if keyword.arg == "accel" and value is not None:
                 if ":" in value:
@@ -44,9 +55,6 @@ def extract_metadata(decorator: ast.Call, is_class_def: bool) -> Metadata | None
                 resource_kwargs[keyword.arg] = value
         else:
             metadata_kwargs[keyword.arg] = value
-
-    if not metadata_kwargs and not resource_kwargs:
-        return None
 
     if is_class_def and (
         "entry" not in metadata_kwargs or metadata_kwargs["entry"] is None

@@ -8,7 +8,7 @@ from langchain.tools import BaseTool
 from langchain.agents import create_agent
 from langchain_ollama import ChatOllama
 
-from papaia import assigned_accel_devices, required_cls
+from papaia import assigned_device, required_cls
 
 
 @required_cls(entry="_run", accel="RTX 8000", pip_install=[
@@ -39,7 +39,7 @@ class Grounding(BaseTool):
 
     def __init__(self):
         super().__init__()
-        self.detector = pipeline(model="IDEA-Research/grounding-dino-tiny", task="zero-shot-object-detection", device=f"cuda:{assigned_accel_devices('Grounding')}")
+        self.detector = pipeline(model="IDEA-Research/grounding-dino-tiny", task="zero-shot-object-detection", device=assigned_device("Grounding"))
 
     def _run(self, image_url: str, labels: List[str], threshold: float = 0.3):
         img = Image.open(BytesIO(requests.get(image_url).content)).convert("RGB")

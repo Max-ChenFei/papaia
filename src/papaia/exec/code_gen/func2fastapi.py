@@ -21,6 +21,10 @@ def func2fastapi(fn: ast.FunctionDef) -> tuple[list[str], str, str]:
     req_model = f"{fn_name.title().replace('_', '')}Request"
     resp_model = f"{fn_name.title().replace('_', '')}Response"
 
+    is_async = isinstance(fn, ast.AsyncFunctionDef)
+    endpoint_def = "async def" if is_async else "def"
+    call_prefix = "await " if is_async else ""
+
     pip_install = ["fastapi", "pydantic"]
     code = f'''from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -39,9 +43,9 @@ class {resp_model}(BaseModel):
 
 # --- auto-generated endpoint ---
 @app.post("{route}", response_model={resp_model})
-def {fn_name}_endpoint(payload: {req_model}):
+{endpoint_def} {fn_name}_endpoint(payload: {req_model}):
     try:
-        result = {fn_name}({", ".join(call_args)})
+        result = {call_prefix}{fn_name}({", ".join(call_args)})
         return {resp_model}(result=result)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
