@@ -36,7 +36,8 @@ class VenvExecutor(AnotherProcess):
         self._py_run_background(venv, desc.ast_node.name, main_file)
 
         base_url = f"http://localhost:{port}"
-        self._wait_for_server(base_url)
+        process = self._processes[desc.ast_node.name]
+        self._wait_for_server(base_url, exit_code=process.poll)
 
         return base_url
 
@@ -61,16 +62,8 @@ class VenvExecutor(AnotherProcess):
             if sys.platform == "win32"
             else py / "bin" / "python"
         )
-        try:
-            # Run in background process
-            process = subprocess.Popen(
-                [str(python), str(main_file)],
-                # Don't hide output so we can see errors
-                # stdout=subprocess.DEVNULL,
-                # stderr=subprocess.DEVNULL,
-            )
-        except subprocess.CalledProcessError as e:
-            print(f"Error running background process: {e}")
+        # Output is not captured, so the server's errors appear in the terminal.
+        process = subprocess.Popen([str(python), str(main_file)])
 
         # Store process for cleanup in stop()
         if not hasattr(self, "_processes"):

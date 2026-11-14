@@ -75,20 +75,36 @@ if __name__ == "__main__":
         desc.append_pip_install(["uvicorn"])
         return main_file
 
-    def _wait_for_server(self, base_url: str, timeout: int = 600) -> None:
-        """Wait for the server to be ready."""
+    def _wait_for_server(
+        self, base_url: str, timeout: int = 600, exit_code=None
+    ) -> None:
+        """Wait for the server to be ready.
+
+        `exit_code` is an optional callable that returns the server process's exit
+        code, or None while it runs; if the process exits first, fail at once
+        instead of waiting for the timeout.
+        """
 
         start_time = time.time()
         while time.time() - start_time < timeout:
-            try:
-                response = requests.get(f"{base_url}/docs", timeout=1)
-                if response.status_code == 200:
-                    return
-            except requests.exceptions.RequestException:
-                time.sleep(0.1)
+            if exit_code is not None and (code := exit_code()) is not None:
+                raise RuntimeError(
+                    f"Server for {base_url} exited with code {code} before it was "
+                    f"ready; see its output above"
+                )
+            if _server_ready(base_url):
+                return
+            time.sleep(0.1)
         raise TimeoutError(
             f"Server at {base_url} did not start within {timeout} seconds"
         )
+
+
+def _server_ready(base_url: str) -> bool:
+    try:
+        return requests.get(f"{base_url}/docs", timeout=1).status_code == 200
+    except requests.exceptions.RequestException:
+        return False
 
 
 LOCK_FILENAME = "requirements.lock.txt"

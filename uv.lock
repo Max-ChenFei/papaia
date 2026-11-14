@@ -1750,6 +1750,8 @@ genartist = [
     { name = "transformers" },
 ]
 test = [
+    { name = "fastapi" },
+    { name = "httpx" },
     { name = "pytest" },
     { name = "pytest-mock" },
 ]
@@ -1783,6 +1785,8 @@ genartist = [
     { name = "transformers", specifier = ">=5.0.0" },
 ]
 test = [
+    { name = "fastapi", specifier = ">=0.135.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-mock", specifier = ">=3.14.0" },
 ]

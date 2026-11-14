@@ -128,3 +128,18 @@ def test_async_tool_endpoint_awaits():
     exec(code, ns)
     resp = TestClient(ns["app"]).post("/tool", json={"x": 1})
     assert resp.status_code == 200 and resp.json() == {"result": 2}
+
+
+def test_wait_for_server_fails_fast_when_process_exits():
+    """A server process that dies must stop `papaia run` at once, not after the timeout."""
+    import subprocess
+    import time as _time
+    from papaia.exec.executors.venv import VenvExecutor, pick_free_port
+
+    proc = subprocess.Popen([sys.executable, "-c", "import sys; sys.exit(3)"])
+    start = _time.time()
+    with pytest.raises(RuntimeError, match="exited with code 3"):
+        VenvExecutor()._wait_for_server(
+            f"http://localhost:{pick_free_port()}", timeout=60, exit_code=proc.poll
+        )
+    assert _time.time() - start < 10

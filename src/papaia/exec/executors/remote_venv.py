@@ -1,6 +1,7 @@
 import sys
 import asyncio
 import threading
+import time
 import asyncssh
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from .another_process import (
     split_pip_install,
     write_lock_file,
     output_tail,
+    _server_ready,
 )
 from ...IR import Desc, Node
 from ...cache import add_remote_cache, REMOTE_CACHE_DIR
@@ -180,16 +182,17 @@ class RemoteVenv(AnotherProcess):
                 base_url = f"http://127.0.0.1:{tunnel.local_port}"
 
                 _print_flush("  Waiting for server to start...")
-                try:
-                    self._wait_for_server(base_url)
-                except TimeoutError as e:
+                problem = await _wait_for_remote_server(
+                    conn, base_url, remote_dir, timeout=600
+                )
+                if problem:
                     log = await conn.run(
                         f"tail -100 {remote_dir}/server.log", check=False
                     )
-                    raise TimeoutError(
+                    raise RuntimeError(
                         f"Tool '{desc.ast_node.name}' did not start on {node.host}: "
-                        f"{e}\nRecent server log:\n{log.stdout}"
-                    ) from e
+                        f"{problem}\nRecent server log:\n{log.stdout}"
+                    )
                 _print_flush(f"  ✓ Server reachable via SSH tunnel at {base_url}")
                 self._processes[desc.ast_node.name]["base_url"] = base_url
                 return base_url
@@ -201,6 +204,25 @@ class RemoteVenv(AnotherProcess):
             if e.stderr:
                 _print_flush(f"[ERROR] stderr:\n{e.stderr}")
             raise
+
+
+async def _wait_for_remote_server(conn, base_url, remote_dir, timeout):
+    """Wait until the server answers; return None, or why it did not start.
+
+    Stops early if the remote server process has exited (e.g., its virtual
+    environment is broken), instead of waiting for the timeout.
+    """
+    start = time.time()
+    while time.time() - start < timeout:
+        if await asyncio.to_thread(_server_ready, base_url):
+            return None
+        alive = await conn.run(
+            f"kill -0 $(cat {remote_dir}/server.pid) 2>/dev/null", check=False
+        )
+        if alive.exit_status != 0:
+            return "the server process exited before it was ready"
+        await asyncio.sleep(0.5)
+    return f"the server did not answer within {timeout} seconds"
 
 
 def _print_flush(msg):
