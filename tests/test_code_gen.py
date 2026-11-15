@@ -23,7 +23,9 @@ def add2(a: int, b: int = 1) -> int:
 
     assert ast_eq(
         ast.parse(code),
-        ast.parse('''from fastapi import FastAPI, HTTPException
+        ast.parse('''import traceback
+
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -56,7 +58,8 @@ def add2_endpoint(payload: Add2Request):
         result = add2(payload.a, payload.b)
         return Add2Response(result=result)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail={"error": f"{type(e).__name__}: {e}", "traceback": traceback.format_exc()})
 '''),
     )
 
@@ -72,14 +75,8 @@ def add2_endpoint(payload: Add2Request):
     Returns:
         The sum of ``a`` and ``b``.
     """
-    import requests
-    url = f'$base_url/add2'
-    payload = {'a': a, 'b': b}
-    response = requests.post(url, json=payload)
-    if response.status_code != 200:
-        error_detail = response.json().get('detail', response.text) if response.headers.get('content-type') == 'application/json' else response.text
-        raise Exception(f'Server error ({response.status_code}): {error_detail}')
-    return response.json()['result']'''
+    from papaia.exec.code_gen.call_tool import call_tool
+    return call_tool('add2', '$base_url/add2', {'a': a, 'b': b})'''
     )
     assert pip_install == ["fastapi", "pydantic"]
 
@@ -113,7 +110,9 @@ def test_cls2fastapi():
     )
     assert ast_eq(
         ast.parse(code),
-        ast.parse('''from fastapi import FastAPI, HTTPException
+        ast.parse('''import traceback
+
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 app = FastAPI()
 # --- your class (kept as-is) ---
@@ -164,7 +163,8 @@ def adder_endpoint(payload: AdderRequest):
         result = instance.add2(payload.a, payload.b)
         return AdderResponse(result=result)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail={"error": f"{type(e).__name__}: {e}", "traceback": traceback.format_exc()})
 '''),
     )
     assert ast_eq(
@@ -184,14 +184,8 @@ class Adder(BaseTool):
         Returns:
             The sum of ``a`` and ``b``.
         """
-        import requests
-        url = f'$base_url/adder'
-        payload = {'a': a, 'b': b}
-        response = requests.post(url, json=payload)
-        if response.status_code != 200:
-            error_detail = response.json().get('detail', response.text) if response.headers.get('content-type') == 'application/json' else response.text
-            raise Exception(f'Server error ({response.status_code}): {error_detail}')
-        return response.json()['result']
+        from papaia.exec.code_gen.call_tool import call_tool
+        return call_tool('Adder', '$base_url/adder', {'a': a, 'b': b})
     '''),
     )
     assert pip_install == ["fastapi", "pydantic"]

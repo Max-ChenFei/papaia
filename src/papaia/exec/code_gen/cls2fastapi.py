@@ -47,7 +47,9 @@ def shutdown_event():
     instance.{teardown}()"""
     )
     pip_install = ["fastapi", "pydantic"]
-    code = f"""from fastapi import FastAPI, HTTPException
+    code = f"""import traceback
+
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 {imports_any}
 app = FastAPI()
@@ -74,7 +76,8 @@ def {cls_name.lower()}_endpoint(payload: {req_model}):
         result = instance.{entry}({", ".join(call_args)})
         return {resp_model}(result=result)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail={{"error": f"{{type(e).__name__}}: {{e}}", "traceback": traceback.format_exc()}})
 """
 
     # Build payload dict for the invoke template
@@ -86,14 +89,8 @@ def {cls_name.lower()}_endpoint(payload: {req_model}):
     doc_stmt = get_docstring_stmt(invoke)
 
     new_body = ast.parse(f"""
-import requests
-url = f"$base_url{route}"
-payload = {{{payload_items}}}
-response = requests.post(url, json=payload)
-if response.status_code != 200:
-    error_detail = response.json().get("detail", response.text) if response.headers.get("content-type") == "application/json" else response.text
-    raise Exception(f"Server error ({{response.status_code}}): {{error_detail}}")
-return response.json()["result"]""").body
+from papaia.exec.code_gen.call_tool import call_tool
+return call_tool({cls_name!r}, "$base_url{route}", {{{payload_items}}})""").body
     invoke.body = ([doc_stmt] if doc_stmt is not None else []) + new_body
     ast.fix_missing_locations(invoke)
 
