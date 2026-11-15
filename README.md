@@ -64,14 +64,12 @@ This runs on a laptop without a GPU or a remote node: `factor` runs in its own v
 
 ## Examples
 
-| Example | Framework | Needs |
-|---|---|---|
-| [`weather_demo_docker`](./use_cases/weather_demo_docker) | LangChain | Docker and internet access: simulates a local and a remote GPU node; no GPU, no API key |
-| [`adk_function_tool`](./use_cases/adk_function_tool) | Google ADK | Nothing extra: shows the tool declaration ADK builds and calls the tool through ADK; no API key |
-| [`CIGEva_langchain`](./use_cases/CIGEva_langchain) | LangChain | GPU (local or remote), Ollama |
-| [`GenArtist_smalagent`](./use_cases/GenArtist_smalagent) | smolagents | GPU (local or remote), Ollama |
-
-The CIGEval and GenArtist examples also contain baseline, Ray Serve, and MCP versions of the same agent for comparison.
+| Example | Framework | Shows | Needs |
+|---|---|---|---|
+| [`weather_demo_docker`](./use_cases/weather_demo_docker) | LangChain | Moving a tool between a local and a remote node by changing only the compute-resource declaration | Docker and internet access: simulates a local and a remote GPU node; no GPU, no API key |
+| [`adk_function_tool`](./use_cases/adk_function_tool) | Google ADK | ADK builds the same tool declaration from a Papaia tool and calls it | Nothing extra; no API key |
+| [`CIGEva_langchain`](./use_cases/CIGEva_langchain) | LangChain | Case study from the paper, with baseline, Ray Serve, and MCP versions for comparison | GPU (local or remote), Ollama |
+| [`GenArtist_smalagent`](./use_cases/GenArtist_smalagent) | smolagents | Case study from the paper, with baseline, Ray Serve, and MCP versions for comparison | GPU (local or remote), Ollama |
 
 ## Documentation
 
