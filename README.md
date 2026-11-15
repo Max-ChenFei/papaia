@@ -74,13 +74,25 @@ The CIGEval and GenArtist examples also contain baseline, Ray Serve, and MCP ver
 
 **Agent frameworks.** Papaia does not depend on an agent framework. A tool is an ordinary Python function or class, and the agent-side stub keeps its name, signature, type hints, docstring, and base classes, so a framework builds the same tool schema from it. The examples cover LangChain (`create_agent` with function and `BaseTool` tools), smolagents (`Tool` classes), and Google ADK (function tools).
 
-## Testing and Support
-
-Unit tests run with `uv sync --group test && uv run pytest` and on every push to `main` and every pull request via [GitHub Actions](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml). Please report bugs and ask questions in [GitHub Issues](https://github.com/Max-ChenFei/papaia/issues). Papaia is maintained by the authors; releases are archived on Zenodo, and the maintainers answer issues and pull requests.
-
 ## Documentation
 
 See the [API Reference](./docs/api-reference.md) for the user-facing primitives, CLI commands, full signatures and parameters, and the custom-executor extension API.
+
+## Testing
+
+To run the unit tests locally:
+
+```bash
+uv sync --group test && uv run pytest
+```
+
+Unit tests also run on every push to `main` and on every pull request via [GitHub Actions](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml).
+
+## Issues and Contributing
+
+Questions, bug reports, and feature requests are welcome! Please open an issue in [GitHub Issues](https://github.com/Max-ChenFei/papaia/issues) to share your feedback. Before creating a new issue, check whether a similar one already exists. For bug reports, include the steps to reproduce the problem, your Python and Papaia versions, and the full error message.
+
+Pull requests are welcome.
 
 ## Citation
 
