@@ -3,6 +3,7 @@
 <p align="center">
 <a href="https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml"><img src="https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml/badge.svg?branch=main" alt="unit tests"></a>
 <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+<a href="./docs/api-reference.md"><img src="https://img.shields.io/badge/docs-API%20reference-blue.svg" alt="Docs"></a>
 </p>
 
 <p align="center">
