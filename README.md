@@ -73,8 +73,6 @@ This runs on a laptop without a GPU or a remote node: `factor` runs in its own v
 
 The CIGEval and GenArtist examples also contain baseline, Ray Serve, and MCP versions of the same agent for comparison.
 
-**Agent frameworks.** Papaia does not depend on an agent framework. A tool is an ordinary Python function or class, and the agent-side stub keeps its name, signature, type hints, docstring, and base classes, so a framework builds the same tool schema from it. The examples cover LangChain (`create_agent` with function and `BaseTool` tools), smolagents (`Tool` classes), and Google ADK (function tools).
-
 ## Documentation
 
 See the [API Reference](./docs/api-reference.md) for the user-facing primitives, CLI commands, full signatures and parameters, and the custom-executor extension API.
