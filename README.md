@@ -87,7 +87,7 @@ To run the unit tests locally:
 uv sync --group test && uv run pytest
 ```
 
-Unit tests also run on every push to `main` and on every pull request via [GitHub Actions](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml).
+Unit tests also run on every push to any branch and on every pull request via [GitHub Actions](https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml).
 
 ## Issues and Contributing
 
