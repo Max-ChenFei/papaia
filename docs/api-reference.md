@@ -128,9 +128,11 @@ ones, so that a tool stays movable when its placement changes:
 
 - **Where tools are defined.** Only tools defined at the top level of the file
   passed to `papaia run` are compiled. Under `papaia run`, a decorated tool
-  imported from another module or defined inside a function raises an error
-  (best effort: a module that was already imported before the run is not
-  re-executed and is therefore not detected).
+  defined in another file and imported into the agent program, or defined
+  inside a function, raises an error (best effort: a module that was already
+  imported before the run is not re-executed and is therefore not detected).
+  Define each tool in the agent file; code it shares with other files must
+  come from a package installed via `pip_install`.
 - **Decorator arguments** must be literals passed by keyword (e.g.,
   `accel="A100:1"`), since the compiler reads them from the source without
   running it. `@required_fn`, `@papaia.required_fn`, and import aliases are
