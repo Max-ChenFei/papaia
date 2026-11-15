@@ -4,6 +4,7 @@
 <a href="https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml"><img src="https://github.com/Max-ChenFei/papaia/actions/workflows/test.yml/badge.svg?branch=main" alt="unit tests"></a>
 <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
 <a href="./docs/api-reference.md"><img src="https://img.shields.io/badge/docs-API%20reference-blue.svg" alt="Docs"></a>
+<a href="https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
 </p>
 
 <p align="center">
@@ -60,14 +61,16 @@ Compile, place, deploy, and run the program with a single command:
 papaia run agent.py -c exec_nodes.toml
 ```
 
-This runs on a laptop without a GPU or a remote node: `factor` runs in its own virtual environment with `sympy` installed, so `sympy` is not needed in the agent's environment, and the program prints `(x - 1)*(x + 1)`.
+This runs without a GPU or a remote node: `factor` runs in its own virtual environment with `sympy` installed, so `sympy` is not needed in the agent's environment, and the program prints `(x - 1)*(x + 1)`.
+
+To see the same tool used by an agent with a local LLM, run the [ADK quick start](./use_cases/adk_ollama) or open it in [Colab](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb).
 
 ## Examples
 
 | Example | Framework | Shows | Needs |
 |---|---|---|---|
+| [`adk_ollama`](./use_cases/adk_ollama) | Google ADK | An agent with a local LLM calling a Papaia tool that runs in its own environment; also runnable in [Colab](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb) | Ollama with `qwen3:0.6b` (CPU only); no GPU, no API key |
 | [`weather_demo_docker`](./use_cases/weather_demo_docker) | LangChain | Moving a tool between a local and a remote node by changing only the compute-resource declaration | Docker and internet access: simulates a local and a remote GPU node; no GPU, no API key |
-| [`adk_function_tool`](./use_cases/adk_function_tool) | Google ADK | ADK builds the same tool declaration from a Papaia tool and calls it | Nothing extra; no API key |
 | [`CIGEva_langchain`](./use_cases/CIGEva_langchain) | LangChain | Case study from the paper, with baseline, Ray Serve, and MCP versions for comparison | GPU (local or remote), Ollama |
 | [`GenArtist_smalagent`](./use_cases/GenArtist_smalagent) | smolagents | Case study from the paper, with baseline, Ray Serve, and MCP versions for comparison | GPU (local or remote), Ollama |
 

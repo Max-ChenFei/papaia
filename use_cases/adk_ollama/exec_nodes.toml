@@ -1,0 +1,5 @@
+# One local node: no GPU, no remote machine.
+[nodes.local]
+location = "local"
+cpus = 2
+memory = 4
