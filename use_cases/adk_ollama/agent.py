@@ -16,9 +16,7 @@ def factor(expression: str) -> str:
         expression: A polynomial in Python syntax, e.g. "x**2 - 1".
     """
     import sys
-
     import sympy
-
     return f"{sympy.factor(expression)} (computed in {sys.prefix})"
 
 

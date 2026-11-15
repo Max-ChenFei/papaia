@@ -31,9 +31,11 @@ pip install papaia
 
 ## Quick Start
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb) Run this example in your browser, without a GPU or an API key.
+This quick demo shows how Papaia simplifies tool integration in a Google ADK agent. the LLM runs locally with Ollama and no GPU needed.
 
-A Google ADK agent with a local LLM uses one tool, `factor`, which needs `sympy`. Papaia runs the tool in its own virtual environment, so `sympy` is not needed in the agent's environment.
+You can run it in your browser in [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb), or locally with the steps below (the files are in [`use_cases/adk_ollama`](./use_cases/adk_ollama)).
+
+The agent has one tool, `factor`, which needs `sympy`. Papaia automatically places the tool in its own virtual environment not the same progress with the agent program on the same execution node.
 
 **1. Install** Papaia, Google ADK, and [Ollama](https://ollama.com/download), and download the model (about 1.4 GB):
 
@@ -73,9 +75,7 @@ def factor(expression: str) -> str:
         expression: A polynomial in Python syntax, e.g. "x**2 - 1".
     """
     import sys
-
     import sympy
-
     return f"{sympy.factor(expression)} (computed in {sys.prefix})"
 
 
@@ -102,8 +102,6 @@ math_assistant > [Calling tool: factor({'expression': 'x**2 - 1'})]
 math_assistant > [Tool result: {'result': '(x - 1)*(x + 1) (computed in .../.papaia_cache/factor/.venv)'}]
 math_assistant > The factored form of $ x^2 - 1 $ is $ (x - 1)(x + 1) $.
 ```
-
-To run a tool on another node, for example a remote GPU node, change only `exec_nodes.toml`; see [`weather_demo_docker`](./use_cases/weather_demo_docker).
 
 ## Examples
 
