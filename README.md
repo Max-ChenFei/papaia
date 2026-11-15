@@ -31,45 +31,85 @@ pip install papaia
 
 ## Quick Start
 
-Declare the execution nodes available for running tools in a compute-resource declaration (`exec_nodes.toml`):
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb) Run this example in your browser, without a GPU or an API key.
 
-```toml
-# exec_nodes.toml
-[nodes.local]
-location = "local"
-cpus = 8
-memory = 32
+A Google ADK agent with a local LLM uses one tool, `factor`, which needs `sympy`. Papaia runs the tool in its own virtual environment, so `sympy` is not needed in the agent's environment.
+
+**1. Install** Papaia, Google ADK, and [Ollama](https://ollama.com/download), and download the model (about 1.4 GB):
+
+```bash
+pip install "git+https://github.com/Max-ChenFei/papaia.git" "google-adk==2.14.1" "litellm==1.109.1"
+ollama pull qwen3:1.7b
 ```
 
-Declare each tool's runtime requirements with a decorator and write your program in ordinary Python (`agent.py`):
+**2. Declare the compute resources** available for running tools (`exec_nodes.toml`):
+
+```toml
+# One local node: no GPU, no remote machine.
+[nodes.local]
+location = "local"
+cpus = 2
+memory = 4
+```
+
+**3. Declare each tool's runtime requirements** with a decorator, and write the agent as usual (`agent.py`):
 
 ```python
+import asyncio
+
+from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+
 from papaia import required_fn
+
 
 @required_fn(pip_install=["sympy"])
 def factor(expression: str) -> str:
-    """Factor a polynomial expression."""
-    import sympy
-    return str(sympy.factor(expression))
+    """Factor a polynomial expression.
 
-print(factor("x**2 - 1"))  # in an agent, register `factor` as a tool instead
+    Args:
+        expression: A polynomial in Python syntax, e.g. "x**2 - 1".
+    """
+    import sys
+
+    import sympy
+
+    return f"{sympy.factor(expression)} (computed in {sys.prefix})"
+
+
+agent = Agent(
+    name="math_assistant",
+    model=LiteLlm(model="ollama_chat/qwen3:1.7b", think=False),  # local LLM served by Ollama
+    instruction="You are a math assistant. Always call the factor tool to factor a polynomial; never factor it yourself.",
+    tools=[factor],
+    generate_content_config=types.GenerateContentConfig(temperature=0),
+)
+asyncio.run(InMemoryRunner(agent=agent).run_debug("Factor x**2 - 1.", verbose=True))
 ```
 
-Compile, place, deploy, and run the program with a single command:
+**4. Compile, place, deploy, and run** the agent with a single command:
 
 ```bash
 papaia run agent.py -c exec_nodes.toml
 ```
 
-This runs without a GPU or a remote node: `factor` runs in its own virtual environment with `sympy` installed, so `sympy` is not needed in the agent's environment, and the program prints `(x - 1)*(x + 1)`.
+The agent calls `factor`, which runs in its own environment under `.papaia_cache/factor/`:
 
-To see the same tool used by an agent with a local LLM, run the [ADK quick start](./use_cases/adk_ollama) or open it in [Colab](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb).
+```
+math_assistant > [Calling tool: factor({'expression': 'x**2 - 1'})]
+math_assistant > [Tool result: {'result': '(x - 1)*(x + 1) (computed in .../.papaia_cache/factor/.venv)'}]
+math_assistant > The factored form of $ x^2 - 1 $ is $ (x - 1)(x + 1) $.
+```
+
+To run a tool on another node, for example a remote GPU node, change only `exec_nodes.toml`; see [`weather_demo_docker`](./use_cases/weather_demo_docker).
 
 ## Examples
 
 | Example | Framework | Shows | Needs |
 |---|---|---|---|
-| [`adk_ollama`](./use_cases/adk_ollama) | Google ADK | An agent with a local LLM calling a Papaia tool that runs in its own environment; also runnable in [Colab](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb) | Ollama with `qwen3:0.6b` (CPU only); no GPU, no API key |
+| [`adk_ollama`](./use_cases/adk_ollama) | Google ADK | The Quick Start: an agent with a local LLM calling a Papaia tool that runs in its own environment; also runnable in [Colab](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb) | Ollama with `qwen3:1.7b` (CPU only); no GPU, no API key |
 | [`weather_demo_docker`](./use_cases/weather_demo_docker) | LangChain | Moving a tool between a local and a remote node by changing only the compute-resource declaration | Docker and internet access: simulates a local and a remote GPU node; no GPU, no API key |
 | [`CIGEva_langchain`](./use_cases/CIGEva_langchain) | LangChain | Case study from the paper, with baseline, Ray Serve, and MCP versions for comparison | GPU (local or remote), Ollama |
 | [`GenArtist_smalagent`](./use_cases/GenArtist_smalagent) | smolagents | Case study from the paper, with baseline, Ray Serve, and MCP versions for comparison | GPU (local or remote), Ollama |
