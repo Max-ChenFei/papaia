@@ -33,9 +33,9 @@ pip install papaia
 
 This quick demo shows how Papaia simplifies tool integration in a Google ADK agent. the LLM runs locally with Ollama and no GPU needed.
 
-You can run it in your browser in [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb), or locally with the steps below (the files are in [`use_cases/adk_ollama`](./use_cases/adk_ollama)).
+You can run it in your browser in [Google Colab](https://colab.research.google.com/github/Max-ChenFei/papaia/blob/main/use_cases/adk_ollama/quickstart.ipynb), or locally with the steps below (the files are in [`use_cases/adk_ollama`](./use_cases/adk_ollama)).
 
-The agent has one tool, `factor`, which needs `sympy`. Papaia automatically places the tool in its own virtual environment not the same progress with the agent program on the same execution node.
+The agent has one tool, `factor`, which needs `sympy`. Papaia automatically places the tool in its own virtual environment, in a separate process from the agent program, on the same execution node.
 
 **1. Install** Papaia, Google ADK, and [Ollama](https://ollama.com/download), and download the model (about 1.4 GB):
 
